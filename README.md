@@ -17,6 +17,18 @@ http://localhost:8080/index.html
 
 Do not open `webapp/index.html` directly from the filesystem. The UI5 bootstrap expects the UI5 Tooling server to provide `resources/sap-ui-core.js`.
 
+`npm run serve` is only a small wrapper around `ui5 serve`. It sets local tool directories for this development environment:
+
+```bash
+UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve
+```
+
+On a normal local setup, direct UI5 Tooling usage works as well:
+
+```bash
+npx ui5 serve --port 8080
+```
+
 ## Current Scope
 
 - OpenUI5 Freestyle app with standard SAPUI5 theming.

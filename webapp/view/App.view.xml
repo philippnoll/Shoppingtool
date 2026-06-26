@@ -24,18 +24,12 @@
                 text="{= ${/items}.length + ' Artikel' }"
                 state="Information" />
             </f:snappedContent>
-            <f:actions>
-              <Button
-                text="Erkennen"
-                type="Emphasized"
-                press=".onRecognize" />
-            </f:actions>
           </f:DynamicPageTitle>
         </f:title>
 
         <f:header>
           <f:DynamicPageHeader pinnable="false">
-            <VBox>
+            <VBox class="sapUiResponsiveContentPadding shoppingContent">
               <Label
                 text="Produkte"
                 labelFor="productInput" />
@@ -47,6 +41,14 @@
                 growing="true"
                 growingMaxLines="5"
                 width="100%" />
+              <Toolbar design="Transparent" class="inputActions">
+                <ToolbarSpacer />
+                <Button
+                  text="Erkennen"
+                  icon="sap-icon://sys-find"
+                  type="Emphasized"
+                  press=".onRecognize" />
+              </Toolbar>
             </VBox>
           </f:DynamicPageHeader>
         </f:header>
