@@ -1,0 +1,108 @@
+<mvc:View
+  controllerName="shoppingtool.controller.App"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <App>
+    <Page
+      title="Shoppingtool"
+      class="shoppingPage">
+      <content>
+        <VBox class="sapUiResponsiveMargin shoppingContent">
+          <Title
+            text="Einkaufsliste"
+            level="H2"
+            class="sapUiTinyMarginBottom" />
+
+          <Text
+            text="Produkte frei eingeben und erkannte Treffer bestätigen."
+            class="sapUiSmallMarginBottom mutedText" />
+
+          <VBox class="inputPanel sapUiSmallMarginBottom">
+            <TextArea
+              value="{/inputText}"
+              placeholder="z.B. buttermann, 2 Milch, Tomaten"
+              rows="3"
+              growing="true"
+              growingMaxLines="5"
+              width="100%" />
+
+            <HBox
+              class="sapUiTinyMarginTop"
+              justifyContent="End">
+              <Button
+                text="Erkennen"
+                type="Emphasized"
+                press=".onRecognize" />
+            </HBox>
+          </VBox>
+
+          <MessageStrip
+            text="Noch keine Artikel erkannt. Gib deine Einkaufsliste ein und starte die Erkennung."
+            type="Information"
+            showIcon="true"
+            visible="{= ${/items}.length === 0 }"
+            class="sapUiSmallMarginBottom" />
+
+          <List
+            id="shoppingList"
+            items="{/items}"
+            noDataText="Keine Artikel in der Liste">
+            <CustomListItem>
+              <VBox class="itemRow">
+                <HBox
+                  alignItems="Center"
+                  justifyContent="SpaceBetween"
+                  class="sapUiTinyMarginBottom">
+                  <ObjectStatus
+                    text="{= ${status} === 'confirmed' ? 'Bestätigt' : 'Vorschlag' }"
+                    state="{= ${status} === 'confirmed' ? 'Success' : 'Warning' }" />
+                  <Text
+                    text="{= ${rawText} ? 'Aus: ' + ${rawText} : '' }"
+                    class="mutedText rawText" />
+                </HBox>
+
+                <HBox
+                  class="itemEditRow"
+                  renderType="Bare">
+                  <Input
+                    value="{name}"
+                    placeholder="Produkt"
+                    width="100%" />
+                  <StepInput
+                    value="{quantity}"
+                    min="1"
+                    width="7rem" />
+                  <Select
+                    selectedKey="{unit}"
+                    width="6.5rem">
+                    <core:Item key="Stk" text="Stk" />
+                    <core:Item key="g" text="g" />
+                    <core:Item key="kg" text="kg" />
+                    <core:Item key="ml" text="ml" />
+                    <core:Item key="l" text="l" />
+                  </Select>
+                </HBox>
+
+                <Toolbar
+                  class="itemActions"
+                  design="Transparent">
+                  <ToolbarSpacer />
+                  <Button
+                    text="Bestätigen"
+                    type="Accept"
+                    visible="{= ${status} !== 'confirmed' }"
+                    press=".onConfirmItem" />
+                  <Button
+                    text="Löschen"
+                    type="Transparent"
+                    press=".onDeleteItem" />
+                </Toolbar>
+              </VBox>
+            </CustomListItem>
+          </List>
+        </VBox>
+      </content>
+    </Page>
+  </App>
+</mvc:View>

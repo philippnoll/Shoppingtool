@@ -1,0 +1,16 @@
+{
+  "name": "shoppingtool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenUI5 shopping list MVP with mock product recognition.",
+  "scripts": {
+    "start": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve --open index.html",
+    "serve": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve",
+    "build": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 build --all",
+    "lint": "eslint webapp"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4.0.0",
+    "eslint": "^9.0.0"
+  }
+}

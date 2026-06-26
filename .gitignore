@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.ui5/
+.ui5-data/
+.config/
+.eslintcache
+npm-debug.log*

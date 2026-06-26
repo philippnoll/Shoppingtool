@@ -1,0 +1,50 @@
+.shoppingPage .sapMPageEnableScrolling {
+  background: var(--sapBackgroundColor);
+}
+
+.shoppingContent {
+  max-width: 42rem;
+}
+
+.inputPanel,
+.itemRow {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.itemRow {
+  padding: 0.75rem 0.25rem;
+}
+
+.itemEditRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.itemActions {
+  padding: 0;
+}
+
+.mutedText {
+  color: var(--sapContent_LabelColor);
+}
+
+.rawText {
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 37.5rem) {
+  .shoppingContent {
+    width: auto;
+    margin: 1rem !important;
+  }
+
+  .itemEditRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "shoppingtool",
+    "type": "application",
+    "title": "Shoppingtool",
+    "description": "Einkaufsliste mit vorbereiteter Produkterkennung",
+    "applicationVersion": {
+      "version": "0.1.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {}
+      }
+    },
+    "rootView": {
+      "viewName": "shoppingtool.view.App",
+      "type": "XML",
+      "id": "app"
+    },
+    "models": {
+      "": {
+        "type": "sap.ui.model.json.JSONModel"
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    }
+  }
+}
