@@ -1,8 +1,10 @@
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/m/MessageToast",
+  "sap/ui/model/Filter",
+  "sap/ui/model/FilterOperator",
   "shoppingtool/model/ProductRecognition"
-], function (Controller, MessageToast, ProductRecognition) {
+], function (Controller, MessageToast, Filter, FilterOperator, ProductRecognition) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -24,6 +26,7 @@ sap.ui.define([
       oModel.setProperty("/items", aItems.concat(aRecognizedItems));
       oModel.setProperty("/nextId", iNextId);
       oModel.setProperty("/inputText", "");
+      this._applyItemFilter();
 
       MessageToast.show(aRecognizedItems.length + " Artikel erkannt.");
     },
@@ -31,6 +34,12 @@ sap.ui.define([
     onConfirmItem: function (oEvent) {
       var sPath = oEvent.getSource().getBindingContext().getPath();
       this.getView().getModel().setProperty(sPath + "/status", "confirmed");
+      this._applyItemFilter();
+    },
+
+    onFilterChange: function (oEvent) {
+      this.getView().getModel().setProperty("/filter", oEvent.getSource().getSelectedKey());
+      this._applyItemFilter();
     },
 
     onDeleteItem: function (oEvent) {
@@ -41,6 +50,19 @@ sap.ui.define([
 
       aItems.splice(iIndex, 1);
       oModel.setProperty("/items", aItems);
+      this._applyItemFilter();
+    },
+
+    _applyItemFilter: function () {
+      var sFilter = this.getView().getModel().getProperty("/filter");
+      var oBinding = this.byId("shoppingList").getBinding("items");
+      var aFilters = [];
+
+      if (sFilter !== "all") {
+        aFilters.push(new Filter("status", FilterOperator.EQ, sFilter));
+      }
+
+      oBinding.filter(aFilters);
     }
   });
 });

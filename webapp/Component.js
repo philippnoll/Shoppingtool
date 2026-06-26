@@ -14,6 +14,7 @@ sap.ui.define([
 
       this.setModel(new JSONModel({
         inputText: "",
+        filter: "all",
         items: [],
         nextId: 1
       }));

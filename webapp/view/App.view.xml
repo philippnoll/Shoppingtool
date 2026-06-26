@@ -72,6 +72,21 @@
                     text="Erkannte Artikel"
                     level="H2" />
                   <ToolbarSpacer />
+                  <SegmentedButton
+                    selectedKey="{/filter}"
+                    selectionChange=".onFilterChange">
+                    <items>
+                      <SegmentedButtonItem
+                        key="all"
+                        text="Alle" />
+                      <SegmentedButtonItem
+                        key="candidate"
+                        text="Vorschläge" />
+                      <SegmentedButtonItem
+                        key="confirmed"
+                        text="Bestätigt" />
+                    </items>
+                  </SegmentedButton>
                   <ObjectStatus
                     text="{= ${/items}.length + ' Artikel' }"
                     state="Information" />
