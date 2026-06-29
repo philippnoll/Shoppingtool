@@ -25,7 +25,7 @@ sap.ui.define([
   }
 
   function recognizeProduct(sRawText) {
-    var oQuantityMatch = sRawText.match(/^(\d+(?:[,.]\d+)?)\s+(.+)$/);
+    var oQuantityMatch = sRawText.match(/^(\d+(?:[,.]\d+)?)\s*x?\s+(.+)$/);
     var fQuantity = oQuantityMatch ? Number(oQuantityMatch[1].replace(",", ".")) : null;
     var sProductText = oQuantityMatch ? oQuantityMatch[2] : sRawText;
     var sKey = sProductText.toLowerCase();

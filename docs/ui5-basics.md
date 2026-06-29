@@ -292,6 +292,36 @@ Wichtig:
 /items     = erkannte Einkaufsartikel
 ```
 
+## CheckBox Und Boolean Binding
+
+Jeder erkannte Artikel bekommt beim Erzeugen ein Feld:
+
+```js
+purchased: false
+```
+
+Die View bindet eine CheckBox daran:
+
+```xml
+<CheckBox selected="{purchased}" />
+```
+
+Weil die CheckBox innerhalb einer Listenzeile steht, ist `{purchased}` relativ zum jeweiligen Artikel.
+
+Beispiel:
+
+```text
+Zeile 1: /items/0/purchased
+Zeile 2: /items/1/purchased
+```
+
+Wenn der User die CheckBox anklickt, schreibt UI5 den neuen Boolean-Wert automatisch ins Model. Das nennt man Two-way Binding.
+
+```text
+CheckBox aus  -> purchased = false
+CheckBox an   -> purchased = true
+```
+
 ## UI5 Vokabeln
 
 ```js

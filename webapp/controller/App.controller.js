@@ -21,7 +21,7 @@ sap.ui.define([
       var aItems = oModel.getProperty("/items").slice();
       var iNextId = oModel.getProperty("/nextId");
       var aRecognizedItems = ProductRecognition.parse(sInput).map(function (oCandidate) {
-        return Object.assign({ id: iNextId++, status: "candidate" }, oCandidate);
+        return Object.assign({ id: iNextId++, status: "candidate", purchased: false }, oCandidate);
       });
 
       oModel.setProperty("/items", aItems.concat(aRecognizedItems));
