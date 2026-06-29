@@ -208,6 +208,37 @@ productCatalog: [
 
 Dann erzeugt UI5 intern Vorschlaege fuer `Butter` und `Milch`.
 
+Der Katalog selbst liegt nicht direkt in der View. Er wird als UI5-Modul geladen.
+
+```js
+sap.ui.define([
+  "shoppingtool/model/ProductCatalog"
+], function (ProductCatalog) {
+  // ProductCatalog ist der Rueckgabewert aus ProductCatalog.js
+});
+```
+
+`ProductCatalog.js` gibt ein Array zurueck:
+
+```js
+return [
+  { key: "butter", name: "Butter" },
+  { key: "milch", name: "Milch" }
+];
+```
+
+`Component.js` schreibt dieses Array ins Model:
+
+```js
+productCatalog: ProductCatalog
+```
+
+Danach kann die View es ueber den Model-Pfad verwenden:
+
+```xml
+suggestionItems="{/productCatalog}"
+```
+
 ## Unser Datenfluss Beim Erkennen
 
 ```text

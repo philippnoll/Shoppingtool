@@ -1,7 +1,8 @@
 sap.ui.define([
   "sap/ui/core/UIComponent",
-  "sap/ui/model/json/JSONModel"
-], function (UIComponent, JSONModel) {
+  "sap/ui/model/json/JSONModel",
+  "shoppingtool/model/ProductCatalog"
+], function (UIComponent, JSONModel, ProductCatalog) {
   "use strict";
 
   return UIComponent.extend("shoppingtool.Component", {
@@ -16,16 +17,7 @@ sap.ui.define([
         inputText: "",
         quickProductText: "",
         filter: "all",
-        productCatalog: [
-          { key: "butter", name: "Butter" },
-          { key: "milch", name: "Milch" },
-          { key: "tomaten", name: "Tomaten" },
-          { key: "brot", name: "Brot" },
-          { key: "eier", name: "Eier" },
-          { key: "kaese", name: "Kaese" },
-          { key: "nudeln", name: "Nudeln" },
-          { key: "reis", name: "Reis" }
-        ],
+        productCatalog: ProductCatalog,
         items: [],
         nextId: 1
       }));
