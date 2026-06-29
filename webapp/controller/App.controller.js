@@ -42,6 +42,28 @@ sap.ui.define([
       this._applyItemFilter();
     },
 
+    onProductSuggestionSelected: function (oEvent) {
+      var oSelectedItem = oEvent.getParameter("selectedItem");
+
+      if (oSelectedItem) {
+        this.getView().getModel().setProperty("/quickProductText", oSelectedItem.getText());
+      }
+    },
+
+    onAppendQuickProduct: function () {
+      var oModel = this.getView().getModel();
+      var sQuickProductText = (oModel.getProperty("/quickProductText") || "").trim();
+      var sInputText = (oModel.getProperty("/inputText") || "").trim();
+
+      if (!sQuickProductText) {
+        MessageToast.show("Bitte waehle oder tippe zuerst ein Produkt.");
+        return;
+      }
+
+      oModel.setProperty("/inputText", sInputText ? sInputText + ", " + sQuickProductText : sQuickProductText);
+      oModel.setProperty("/quickProductText", "");
+    },
+
     onDeleteItem: function (oEvent) {
       var oModel = this.getView().getModel();
       var sPath = oEvent.getSource().getBindingContext().getPath();

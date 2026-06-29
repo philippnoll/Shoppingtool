@@ -160,6 +160,54 @@ je nach Zeile:
 /items/2/name
 ```
 
+## Suggestions Sind Auch Binding
+
+Das schnelle Produktfeld nutzt `sap.m.Input` mit UI5-Suggestions.
+
+```xml
+<Input
+  value="{/quickProductText}"
+  showSuggestion="true"
+  suggestionItems="{/productCatalog}">
+  <suggestionItems>
+    <core:Item
+      key="{key}"
+      text="{name}" />
+  </suggestionItems>
+</Input>
+```
+
+Die wichtigen Teile:
+
+```xml
+value="{/quickProductText}"
+```
+
+bindet den aktuell getippten Wert an das Model.
+
+```xml
+suggestionItems="{/productCatalog}"
+```
+
+sagt UI5: Erzeuge Vorschlaege aus dem Array `/productCatalog`.
+
+```xml
+text="{name}"
+```
+
+ist wieder relativ zum jeweiligen Katalogeintrag.
+
+Beispiel:
+
+```js
+productCatalog: [
+  { key: "butter", name: "Butter" },
+  { key: "milch", name: "Milch" }
+]
+```
+
+Dann erzeugt UI5 intern Vorschlaege fuer `Butter` und `Milch`.
+
 ## Unser Datenfluss Beim Erkennen
 
 ```text
