@@ -1,11 +1,9 @@
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/m/MessageToast",
-  "sap/ui/model/Filter",
-  "sap/ui/model/FilterOperator",
   "shoppingtool/model/ProductRecognition",
   "shoppingtool/model/ProductSearch"
-], function (Controller, MessageToast, Filter, FilterOperator, ProductRecognition, ProductSearch) {
+], function (Controller, MessageToast, ProductRecognition, ProductSearch) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -21,26 +19,14 @@ sap.ui.define([
       var aItems = oModel.getProperty("/items").slice();
       var iNextId = oModel.getProperty("/nextId");
       var aRecognizedItems = ProductRecognition.parse(sInput).map(function (oCandidate) {
-        return Object.assign({ id: iNextId++, status: "candidate", purchased: false }, oCandidate);
+        return Object.assign({ id: iNextId++, purchased: false }, oCandidate);
       });
 
       oModel.setProperty("/items", aItems.concat(aRecognizedItems));
       oModel.setProperty("/nextId", iNextId);
       oModel.setProperty("/inputText", "");
-      this._applyItemFilter();
 
       MessageToast.show(aRecognizedItems.length + " Artikel erkannt.");
-    },
-
-    onConfirmItem: function (oEvent) {
-      var sPath = oEvent.getSource().getBindingContext().getPath();
-      this.getView().getModel().setProperty(sPath + "/status", "confirmed");
-      this._applyItemFilter();
-    },
-
-    onFilterChange: function (oEvent) {
-      this.getView().getModel().setProperty("/filter", oEvent.getSource().getSelectedKey());
-      this._applyItemFilter();
     },
 
     onProductSuggestionSelected: function (oEvent) {
@@ -81,19 +67,6 @@ sap.ui.define([
 
       aItems.splice(iIndex, 1);
       oModel.setProperty("/items", aItems);
-      this._applyItemFilter();
-    },
-
-    _applyItemFilter: function () {
-      var sFilter = this.getView().getModel().getProperty("/filter");
-      var oBinding = this.byId("shoppingList").getBinding("items");
-      var aFilters = [];
-
-      if (sFilter !== "all") {
-        aFilters.push(new Filter("status", FilterOperator.EQ, sFilter));
-      }
-
-      oBinding.filter(aFilters);
     }
   });
 });

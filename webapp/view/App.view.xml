@@ -96,24 +96,9 @@
               <headerToolbar>
                 <Toolbar>
                   <Title
-                    text="Erkannte Artikel"
+                    text="Einkaufsliste"
                     level="H2" />
                   <ToolbarSpacer />
-                  <SegmentedButton
-                    selectedKey="{/filter}"
-                    selectionChange=".onFilterChange">
-                    <items>
-                      <SegmentedButtonItem
-                        key="all"
-                        text="Alle" />
-                      <SegmentedButtonItem
-                        key="candidate"
-                        text="Vorschläge" />
-                      <SegmentedButtonItem
-                        key="confirmed"
-                        text="Bestätigt" />
-                    </items>
-                  </SegmentedButton>
                   <ObjectStatus
                     text="{= ${/items}.length + ' Artikel' }"
                     state="Information" />
@@ -123,6 +108,12 @@
                 <HBox
                   alignItems="Start"
                   class="shoppingItemShell">
+                  <customData>
+                    <core:CustomData
+                      key="purchased"
+                      value="{purchased}"
+                      writeToDom="true" />
+                  </customData>
                   <CheckBox
                     selected="{purchased}"
                     class="shoppingItemCheck" />
@@ -131,16 +122,7 @@
                       alignItems="Center"
                       justifyContent="SpaceBetween"
                       class="sapUiTinyMarginBottom">
-                      <HBox alignItems="Center">
-                        <ObjectStatus
-                          text="{= ${status} === 'confirmed' ? 'Bestätigt' : 'Vorschlag' }"
-                          state="{= ${status} === 'confirmed' ? 'Success' : 'Warning' }" />
-                        <ObjectStatus
-                          text="Gekauft"
-                          state="Success"
-                          visible="{purchased}"
-                          class="sapUiTinyMarginBegin" />
-                      </HBox>
+                      <Text text="{= ${purchased} ? 'Erledigt' : 'Offen' }" />
                       <Text
                         text="{= ${rawText} ? 'Aus: ' + ${rawText} : '' }"
                         class="mutedText rawText" />
@@ -172,11 +154,6 @@
                       class="itemActions"
                       design="Transparent">
                       <ToolbarSpacer />
-                      <Button
-                        text="Bestätigen"
-                        type="Accept"
-                        visible="{= ${status} !== 'confirmed' }"
-                        press=".onConfirmItem" />
                       <Button
                         text="Löschen"
                         type="Transparent"

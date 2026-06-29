@@ -16,7 +16,6 @@ sap.ui.define([
       this.setModel(new JSONModel({
         inputText: "",
         quickProductText: "",
-        filter: "all",
         productCatalog: ProductCatalog,
         productSuggestions: ProductCatalog,
         items: [],

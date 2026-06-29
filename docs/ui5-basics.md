@@ -54,7 +54,6 @@ index.html -> Component.js -> manifest.json -> App.view.xml -> App.controller.js
 ```js
 this.setModel(new JSONModel({
   inputText: "",
-  filter: "all",
   items: [],
   nextId: 1
 }));
@@ -112,7 +111,6 @@ Mit Slash bedeutet: absolut ab Model-Wurzel.
 ```xml
 value="{/inputText}"
 items="{/items}"
-selectedKey="{/filter}"
 ```
 
 Ohne Slash bedeutet: relativ zum aktuellen Binding-Kontext.
@@ -320,6 +318,29 @@ Wenn der User die CheckBox anklickt, schreibt UI5 den neuen Boolean-Wert automat
 ```text
 CheckBox aus  -> purchased = false
 CheckBox an   -> purchased = true
+```
+
+Fuer die Zeilenfarbe nutzen wir dieselbe Model-Property nochmal als DOM-Datenattribut:
+
+```xml
+<core:CustomData
+  key="purchased"
+  value="{purchased}"
+  writeToDom="true" />
+```
+
+Daraus macht UI5 im Browser sinngemaess:
+
+```html
+data-purchased="true"
+```
+
+Dann kann CSS darauf reagieren:
+
+```css
+.shoppingItemShell[data-purchased="true"] {
+  background: var(--sapSuccessBackground);
+}
 ```
 
 ## UI5 Vokabeln
