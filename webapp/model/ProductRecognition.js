@@ -1,4 +1,7 @@
-sap.ui.define([], function () {
+sap.ui.define([
+  "shoppingtool/model/ProductCatalog",
+  "shoppingtool/model/ProductSearch"
+], function (ProductCatalog, ProductSearch) {
   "use strict";
 
   var PRODUCT_RULES = {
@@ -27,6 +30,7 @@ sap.ui.define([], function () {
     var sProductText = oQuantityMatch ? oQuantityMatch[2] : sRawText;
     var sKey = sProductText.toLowerCase();
     var oRule = PRODUCT_RULES[sKey];
+    var oSearchMatch = ProductSearch.search(ProductCatalog, sProductText)[0];
 
     if (oRule) {
       return {
@@ -34,6 +38,15 @@ sap.ui.define([], function () {
         name: oRule.name,
         quantity: fQuantity || oRule.quantity,
         unit: oRule.unit
+      };
+    }
+
+    if (oSearchMatch) {
+      return {
+        rawText: sRawText,
+        name: oSearchMatch.name,
+        quantity: fQuantity || oSearchMatch.quantity || 1,
+        unit: oSearchMatch.unit || "Stk"
       };
     }
 

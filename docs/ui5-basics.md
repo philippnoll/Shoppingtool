@@ -253,6 +253,14 @@ oModel.setProperty("/productSuggestions", ProductSearch.search(aProductCatalog, 
 
 Die View muss nicht wissen, ob dahinter MiniSearch oder eine andere Suchlogik steckt.
 
+Wichtig bei eigener Suchlogik:
+
+```xml
+filterSuggests="false"
+```
+
+Ohne diese Einstellung filtert `sap.m.Input` die Vorschlaege nach dem Tippen nochmal selbst. Das ist fuer Prefix-Suche okay, wuerde aber Fuzzy-Treffer wie `tomatn -> Tomaten` wieder ausblenden.
+
 ## Unser Datenfluss Beim Erkennen
 
 ```text
