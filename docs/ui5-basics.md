@@ -233,11 +233,25 @@ return [
 productCatalog: ProductCatalog
 ```
 
-Danach kann die View es ueber den Model-Pfad verwenden:
+Danach kann die View es ueber einen Model-Pfad verwenden:
 
 ```xml
-suggestionItems="{/productCatalog}"
+suggestionItems="{/productSuggestions}"
 ```
+
+`/productCatalog` ist der komplette Katalog. `/productSuggestions` ist die aktuell angezeigte Trefferliste. Beim Tippen ruft das Input-Control das `suggest`-Event aus:
+
+```xml
+suggest=".onSuggestProduct"
+```
+
+Der Controller setzt dann neue Vorschlaege:
+
+```js
+oModel.setProperty("/productSuggestions", ProductSearch.search(aProductCatalog, sValue));
+```
+
+Die View muss nicht wissen, ob dahinter MiniSearch oder eine andere Suchlogik steckt.
 
 ## Unser Datenfluss Beim Erkennen
 

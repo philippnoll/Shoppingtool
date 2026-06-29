@@ -3,8 +3,9 @@ sap.ui.define([
   "sap/m/MessageToast",
   "sap/ui/model/Filter",
   "sap/ui/model/FilterOperator",
-  "shoppingtool/model/ProductRecognition"
-], function (Controller, MessageToast, Filter, FilterOperator, ProductRecognition) {
+  "shoppingtool/model/ProductRecognition",
+  "shoppingtool/model/ProductSearch"
+], function (Controller, MessageToast, Filter, FilterOperator, ProductRecognition, ProductSearch) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -48,6 +49,14 @@ sap.ui.define([
       if (oSelectedItem) {
         this.getView().getModel().setProperty("/quickProductText", oSelectedItem.getText());
       }
+    },
+
+    onSuggestProduct: function (oEvent) {
+      var oModel = this.getView().getModel();
+      var sValue = oEvent.getParameter("suggestValue");
+      var aProductCatalog = oModel.getProperty("/productCatalog");
+
+      oModel.setProperty("/productSuggestions", ProductSearch.search(aProductCatalog, sValue));
     },
 
     onAppendQuickProduct: function () {

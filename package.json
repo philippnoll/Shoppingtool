@@ -12,5 +12,8 @@
   "devDependencies": {
     "@ui5/cli": "^4.0.0",
     "eslint": "^9.0.0"
+  },
+  "dependencies": {
+    "minisearch": "^7.2.0"
   }
 }

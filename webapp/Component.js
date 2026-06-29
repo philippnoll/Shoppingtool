@@ -18,6 +18,7 @@ sap.ui.define([
         quickProductText: "",
         filter: "all",
         productCatalog: ProductCatalog,
+        productSuggestions: ProductCatalog,
         items: [],
         nextId: 1
       }));

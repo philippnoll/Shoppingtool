@@ -39,7 +39,8 @@
                   value="{/quickProductText}"
                   placeholder="z.B. Butter"
                   showSuggestion="true"
-                  suggestionItems="{/productCatalog}"
+                  suggestionItems="{/productSuggestions}"
+                  suggest=".onSuggestProduct"
                   suggestionItemSelected=".onProductSuggestionSelected"
                   submit=".onAppendQuickProduct"
                   width="100%">

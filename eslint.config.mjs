@@ -1,11 +1,15 @@
 export default [
   {
+    ignores: ["webapp/thirdparty/**"],
+  },
+  {
     files: ["webapp/**/*.js"],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: "script",
       globals: {
-        sap: "readonly"
+        sap: "readonly",
+        window: "readonly"
       }
     },
     rules: {
