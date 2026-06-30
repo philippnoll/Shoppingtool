@@ -290,6 +290,35 @@ Wichtig:
 /items     = erkannte Einkaufsartikel
 ```
 
+## Parser-Schicht
+
+Die Produkterkennung besteht jetzt aus kleinen Schritten statt aus einer einzigen grossen Regex.
+
+```text
+parse(...)
+  |
+  +-- Eingabe grob trennen
+  |   Komma, Semikolon, neue Zeile, "und", "+"
+  |
+  +-- splitWhitespaceItems(...)
+  |   trennt z.B. "butter milch bananen"
+  |   aber nur, wenn alle Teile erkennbare Produkte sind
+  |
+  +-- recognizeProduct(...)
+      erkennt pro Artikel Name, Menge und Einheit
+```
+
+Beispiele:
+
+```text
+2 butter      -> Menge 2, Produkt Butter
+2x milch      -> Menge 2, Produkt Milch
+500g tomaten  -> Menge 500, Einheit g, Produkt Tomaten
+käse          -> Kaese
+```
+
+Wichtig: Leerzeichen sind als Trenner mehrdeutig. `2 butter` gehoert zusammen, `butter milch` sind zwei Artikel. Deshalb splitten wir Leerzeichen nur dann, wenn die einzelnen Teile als Produkte erkannt werden.
+
 ## CheckBox Und Boolean Binding
 
 Jeder erkannte Artikel bekommt beim Erzeugen ein Feld:

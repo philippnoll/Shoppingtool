@@ -2,27 +2,32 @@ sap.ui.define([], function () {
   "use strict";
 
   function search(aProducts, sQuery) {
-    var sNormalizedQuery = (sQuery || "").trim();
+    var sNormalizedQuery = normalizeSearchText(sQuery);
 
     if (!sNormalizedQuery) {
       return aProducts.slice();
     }
 
-    if (!window.MiniSearch) {
+    if (typeof window === "undefined" || !window.MiniSearch) {
       return fallbackSearch(aProducts, sNormalizedQuery);
     }
 
     var oMiniSearch = new window.MiniSearch({
       idField: "key",
-      fields: ["name"],
+      fields: ["key", "name", "normalizedName"],
       storeFields: ["key", "name", "quantity", "unit"],
       searchOptions: {
         prefix: true,
         fuzzy: 0.4
       }
     });
+    var aSearchProducts = aProducts.map(function (oProduct) {
+      return Object.assign({}, oProduct, {
+        normalizedName: normalizeSearchText(oProduct.name)
+      });
+    });
 
-    oMiniSearch.addAll(aProducts);
+    oMiniSearch.addAll(aSearchProducts);
 
     return oMiniSearch.search(sNormalizedQuery).map(function (oResult) {
       return {
@@ -35,11 +40,20 @@ sap.ui.define([], function () {
   }
 
   function fallbackSearch(aProducts, sQuery) {
-    var sNormalizedQuery = sQuery.toLowerCase();
-
     return aProducts.filter(function (oProduct) {
-      return oProduct.name.toLowerCase().indexOf(sNormalizedQuery) !== -1;
+      return normalizeSearchText(oProduct.name).indexOf(sQuery) !== -1 ||
+        normalizeSearchText(oProduct.key).indexOf(sQuery) !== -1;
     });
+  }
+
+  function normalizeSearchText(sText) {
+    return (sText || "")
+      .trim()
+      .toLowerCase()
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss");
   }
 
   return {
