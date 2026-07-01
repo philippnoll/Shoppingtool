@@ -1,8 +1,9 @@
 sap.ui.define([
   "sap/ui/core/UIComponent",
   "sap/ui/model/json/JSONModel",
-  "shoppingtool/model/ProductCatalog"
-], function (UIComponent, JSONModel, ProductCatalog) {
+  "shoppingtool/model/ProductCatalog",
+  "shoppingtool/model/MockOffers"
+], function (UIComponent, JSONModel, ProductCatalog, MockOffers) {
   "use strict";
 
   return UIComponent.extend("shoppingtool.Component", {
@@ -18,6 +19,17 @@ sap.ui.define([
         quickProductText: "",
         productCatalog: ProductCatalog,
         productSuggestions: ProductCatalog,
+        offers: MockOffers,
+        optimizationResult: {
+          hasResult: false,
+          bestStore: {
+            storeName: "",
+            totalPrice: 0,
+            matchedItems: [],
+            missingItems: []
+          },
+          stores: []
+        },
         items: [],
         nextId: 1
       }));

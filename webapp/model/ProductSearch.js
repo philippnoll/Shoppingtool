@@ -15,7 +15,7 @@ sap.ui.define([], function () {
     var oMiniSearch = new window.MiniSearch({
       idField: "key",
       fields: ["key", "name", "normalizedName"],
-      storeFields: ["key", "name", "quantity", "unit"],
+      storeFields: ["key", "name", "quantity", "unit", "category"],
       searchOptions: {
         prefix: true,
         fuzzy: 0.4
@@ -34,7 +34,8 @@ sap.ui.define([], function () {
         key: oResult.key,
         name: oResult.name,
         quantity: oResult.quantity,
-        unit: oResult.unit
+        unit: oResult.unit,
+        category: oResult.category
       };
     });
   }

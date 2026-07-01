@@ -2,8 +2,9 @@ sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/m/MessageToast",
   "shoppingtool/model/ProductRecognition",
-  "shoppingtool/model/ProductSearch"
-], function (Controller, MessageToast, ProductRecognition, ProductSearch) {
+  "shoppingtool/model/ProductSearch",
+  "shoppingtool/model/ShoppingOptimizer"
+], function (Controller, MessageToast, ProductRecognition, ProductSearch, ShoppingOptimizer) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -25,6 +26,7 @@ sap.ui.define([
       oModel.setProperty("/items", aItems.concat(aRecognizedItems));
       oModel.setProperty("/nextId", iNextId);
       oModel.setProperty("/inputText", "");
+      this._clearOptimizationResult();
 
       MessageToast.show(aRecognizedItems.length + " Artikel erkannt.");
     },
@@ -67,6 +69,33 @@ sap.ui.define([
 
       aItems.splice(iIndex, 1);
       oModel.setProperty("/items", aItems);
+      this._clearOptimizationResult();
+    },
+
+    onOptimizeShopping: function () {
+      var oModel = this.getView().getModel();
+      var aItems = oModel.getProperty("/items");
+      var aOffers = oModel.getProperty("/offers");
+
+      if (!aItems.length) {
+        MessageToast.show("Bitte lege zuerst Artikel in die Einkaufsliste.");
+        return;
+      }
+
+      oModel.setProperty("/optimizationResult", ShoppingOptimizer.optimize(aItems, aOffers));
+    },
+
+    _clearOptimizationResult: function () {
+      this.getView().getModel().setProperty("/optimizationResult", {
+        hasResult: false,
+        bestStore: {
+          storeName: "",
+          totalPrice: 0,
+          matchedItems: [],
+          missingItems: []
+        },
+        stores: []
+      });
     }
   });
 });

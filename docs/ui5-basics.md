@@ -319,6 +319,76 @@ käse          -> Kaese
 
 Wichtig: Leerzeichen sind als Trenner mehrdeutig. `2 butter` gehoert zusammen, `butter milch` sind zwei Artikel. Deshalb splitten wir Leerzeichen nur dann, wenn die einzelnen Teile als Produkte erkannt werden.
 
+## Optimierungs-Schicht
+
+Die erste Preisoptimierung ist wieder ein eigenes Modul:
+
+```text
+ShoppingOptimizer.optimize(items, offers)
+```
+
+Input:
+
+```text
+items  = aktuelle Einkaufsliste
+offers = Angebotsdaten
+```
+
+Output:
+
+```text
+hasResult = steuert, ob die Ergebnisanzeige sichtbar ist
+bestStore = bester Laden fuer diese Liste
+stores    = bewertete Laeden mit Treffern, fehlenden Artikeln und Preis
+```
+
+Das Ergebnisobjekt ist auch ohne Optimierung schon im Model vorhanden:
+
+```js
+optimizationResult: {
+  hasResult: false,
+  bestStore: {
+    storeName: "",
+    totalPrice: 0,
+    matchedItems: [],
+    missingItems: []
+  },
+  stores: []
+}
+```
+
+Dadurch hat die View stabile Binding-Pfade. Sie kann also immer auf `/optimizationResult/bestStore/missingItems` binden, ohne dass `bestStore` zwischendurch `null` ist.
+
+Wichtig: `offers` kommt aktuell aus `MockOffers.js`. Das ist absichtlich so geschnitten, dass spaeter Scraper-Daten oder Bon-Daten im gleichen Format liefern koennen.
+
+```text
+MockOffers jetzt
+        |
+        v
+ShoppingOptimizer
+        ^
+        |
+Scraper-Daten spaeter
+```
+
+Der Controller macht nur die Verbindung zur UI:
+
+```text
+Button "Optimieren"
+        |
+        v
+onOptimizeShopping()
+        |
+        v
+ShoppingOptimizer.optimize(...)
+        |
+        v
+Model /optimizationResult
+        |
+        v
+View zeigt Preisoptimierung
+```
+
 ## CheckBox Und Boolean Binding
 
 Jeder erkannte Artikel bekommt beim Erzeugen ein Feld:

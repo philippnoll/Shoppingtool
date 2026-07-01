@@ -102,6 +102,11 @@
                   <ObjectStatus
                     text="{= ${/items}.length + ' Artikel' }"
                     state="Information" />
+                  <Button
+                    text="Optimieren"
+                    icon="sap-icon://simulate"
+                    type="Emphasized"
+                    press=".onOptimizeShopping" />
                 </Toolbar>
               </headerToolbar>
               <CustomListItem
@@ -159,6 +164,39 @@
                 </HBox>
               </CustomListItem>
             </List>
+
+            <Panel
+              headerText="Preisoptimierung"
+              visible="{/optimizationResult/hasResult}"
+              class="sapUiSmallMarginTop">
+              <VBox>
+                <HBox
+                  alignItems="Center"
+                  justifyContent="SpaceBetween"
+                  class="sapUiTinyMarginBottom">
+                  <Title
+                    text="{/optimizationResult/bestStore/storeName}"
+                    level="H3" />
+                  <ObjectNumber
+                    number="{/optimizationResult/bestStore/totalPrice}"
+                    unit="EUR"
+                    state="Success" />
+                </HBox>
+                <ObjectStatus
+                  text="{= ${/optimizationResult/bestStore/missingItems}.length === 0 ? 'Alle Artikel gefunden' : ${/optimizationResult/bestStore/missingItems}.length + ' Artikel fehlen' }"
+                  state="{= ${/optimizationResult/bestStore/missingItems}.length === 0 ? 'Success' : 'Warning' }"
+                  class="sapUiSmallMarginBottom" />
+                <List
+                  items="{/optimizationResult/bestStore/matchedItems}"
+                  noDataText="Keine passenden Angebote">
+                  <StandardListItem
+                    title="{name}"
+                    description="{= ${packages} + ' x ' + ${offerName} }"
+                    info="{= ${totalPrice} + ' EUR' }"
+                    infoState="Success" />
+                </List>
+              </VBox>
+            </Panel>
           </VBox>
         </f:content>
       </f:DynamicPage>

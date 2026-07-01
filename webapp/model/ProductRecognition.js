@@ -5,13 +5,13 @@ sap.ui.define([
   "use strict";
 
   var PRODUCT_RULES = {
-    buttermann: { name: "Butter", quantity: 1, unit: "Stk" },
-    butter: { name: "Butter", quantity: 1, unit: "Stk" },
-    milch: { name: "Milch", quantity: 1, unit: "l" },
-    tomaten: { name: "Tomaten", quantity: 500, unit: "g" },
-    tomate: { name: "Tomaten", quantity: 500, unit: "g" },
-    brot: { name: "Brot", quantity: 1, unit: "Stk" },
-    eier: { name: "Eier", quantity: 10, unit: "Stk" }
+    buttermann: { productKey: "butter", name: "Butter", quantity: 1, unit: "Stk", category: "Kuehlung" },
+    butter: { productKey: "butter", name: "Butter", quantity: 1, unit: "Stk", category: "Kuehlung" },
+    milch: { productKey: "milch", name: "Milch", quantity: 1, unit: "l", category: "Kuehlung" },
+    tomaten: { productKey: "tomaten", name: "Tomaten", quantity: 500, unit: "g", category: "Gemuese" },
+    tomate: { productKey: "tomaten", name: "Tomaten", quantity: 500, unit: "g", category: "Gemuese" },
+    brot: { productKey: "brot", name: "Brot", quantity: 1, unit: "Stk", category: "Backwaren" },
+    eier: { productKey: "eier", name: "Eier", quantity: 10, unit: "Stk", category: "Kuehlung" }
   };
   var UNIT_ALIASES = {
     g: "g",
@@ -46,26 +46,32 @@ sap.ui.define([
     if (oRule) {
       return {
         rawText: sRawText,
+        productKey: oRule.productKey,
         name: oRule.name,
         quantity: getQuantity(oAmount, oRule.quantity),
-        unit: getUnit(oAmount, oRule.unit)
+        unit: getUnit(oAmount, oRule.unit),
+        category: oRule.category
       };
     }
 
     if (oSearchMatch) {
       return {
         rawText: sRawText,
+        productKey: oSearchMatch.key,
         name: oSearchMatch.name,
         quantity: getQuantity(oAmount, oSearchMatch.quantity || 1),
-        unit: getUnit(oAmount, oSearchMatch.unit || "Stk")
+        unit: getUnit(oAmount, oSearchMatch.unit || "Stk"),
+        category: oSearchMatch.category || "Sonstiges"
       };
     }
 
     return {
       rawText: sRawText,
+      productKey: null,
       name: toTitleCase(sProductText),
       quantity: getQuantity(oAmount, 1),
-      unit: getUnit(oAmount, "Stk")
+      unit: getUnit(oAmount, "Stk"),
+      category: "Sonstiges"
     };
   }
 

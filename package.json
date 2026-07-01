@@ -8,7 +8,7 @@
     "serve": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve",
     "build": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 build --all",
     "lint": "eslint webapp test",
-    "test": "node --test test/productRecognition.test.js"
+    "test": "node --test test/*.test.js"
   },
   "devDependencies": {
     "@ui5/cli": "^4.0.0",
