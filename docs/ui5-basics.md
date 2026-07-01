@@ -349,28 +349,20 @@ CheckBox aus  -> purchased = false
 CheckBox an   -> purchased = true
 ```
 
-Fuer die Zeilenfarbe nutzen wir dieselbe Model-Property nochmal als DOM-Datenattribut:
+Fuer die semantische Markierung nutzen wir die UI5-Property `highlight` am `CustomListItem`:
 
 ```xml
-<core:CustomData
-  key="purchased"
-  value="{purchased}"
-  writeToDom="true" />
+<CustomListItem highlight="{= ${purchased} ? 'Success' : 'None' }">
 ```
 
-Daraus macht UI5 im Browser sinngemaess:
+Das ist wieder Binding:
 
-```html
-data-purchased="true"
+```text
+purchased = true  -> highlight = Success
+purchased = false -> highlight = None
 ```
 
-Dann kann CSS darauf reagieren:
-
-```css
-.shoppingItemShell[data-purchased="true"] {
-  background: var(--sapSuccessBackground);
-}
-```
+Der Vorteil: Die farbliche Bedeutung kommt vom UI5-Control und vom aktiven SAP-Theme, nicht von eigener CSS-Zustandslogik.
 
 ## UI5 Vokabeln
 

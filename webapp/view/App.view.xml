@@ -104,16 +104,12 @@
                     state="Information" />
                 </Toolbar>
               </headerToolbar>
-              <CustomListItem>
+              <CustomListItem
+                highlight="{= ${purchased} ? 'Success' : 'None' }"
+                highlightText="{= ${purchased} ? 'Erledigt' : '' }">
                 <HBox
                   alignItems="Start"
                   class="shoppingItemShell">
-                  <customData>
-                    <core:CustomData
-                      key="purchased"
-                      value="{purchased}"
-                      writeToDom="true" />
-                  </customData>
                   <CheckBox
                     selected="{purchased}"
                     class="shoppingItemCheck" />

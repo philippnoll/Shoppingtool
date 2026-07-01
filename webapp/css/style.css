@@ -18,20 +18,8 @@
 
 .shoppingItemShell {
   box-sizing: border-box;
-  border-left: 0.25rem solid transparent;
-  border-radius: 0.375rem;
   padding: 0.75rem 0.25rem;
-  transition: background-color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
   width: 100%;
-}
-
-.shoppingItemShell[data-purchased="true"] {
-  background: var(--sapSuccessBackground, #f5faf5);
-  border-left-color: var(--sapPositiveColor, #107e3e);
-}
-
-.shoppingItemShell[data-purchased="true"] .itemRow {
-  opacity: 0.72;
 }
 
 .shoppingItemCheck {
