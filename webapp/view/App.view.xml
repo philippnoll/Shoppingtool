@@ -211,6 +211,11 @@
                   text="{= ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Preisersparnis ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR, Zusatzladen-Abzug ' + ${/optimizationResult/splitPlan/totalExtraStorePenalty} + ' EUR, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR' }"
                   state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }"
                   class="sapUiSmallMarginBottom" />
+                <MessageStrip
+                  text="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Empfehlung: Split lohnt sich, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR Ersparnis.' : 'Empfehlung: Ein Laden reicht. Der Split spart nach Zusatzladen-Abzug nicht genug.' }"
+                  type="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }"
+                  showIcon="true"
+                  class="sapUiSmallMarginBottom" />
                 <List
                   items="{/optimizationResult/splitPlan/stores}"
                   noDataText="Keine Split-Angebote">
