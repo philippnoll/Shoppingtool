@@ -1,7 +1,7 @@
 sap.ui.define([], function () {
   "use strict";
 
-  function optimize(aItems, aOffers) {
+  function optimize(aItems, aOffers, oOptions) {
     var aStores = buildStores(aOffers).map(function (oStore) {
       return evaluateStore(oStore, aItems);
     });
@@ -13,7 +13,7 @@ sap.ui.define([], function () {
     return {
       hasResult: aStores.length > 0,
       bestStore: oBestStore,
-      splitPlan: buildSplitPlan(aItems, aOffers, oBestStore),
+      splitPlan: buildSplitPlan(aItems, aOffers, oBestStore, oOptions),
       stores: aStores
     };
   }
@@ -66,10 +66,16 @@ sap.ui.define([], function () {
     };
   }
 
-  function buildSplitPlan(aItems, aOffers, oBestStore) {
+  function buildSplitPlan(aItems, aOffers, oBestStore, oOptions) {
     var aMatchedItems = [];
     var aMissingItems = [];
     var fTotalPrice = 0;
+    var iStoreCount;
+    var iExtraStoreCount;
+    var fExtraStorePenalty = getExtraStorePenalty(oOptions);
+    var fSavingsComparedToBestStore;
+    var fTotalExtraStorePenalty;
+    var fEffectiveSavings;
 
     aItems.forEach(function (oItem) {
       var oMatchedItem = findBestMatchedItem(aOffers, oItem);
@@ -83,10 +89,22 @@ sap.ui.define([], function () {
       fTotalPrice += oMatchedItem.totalPrice;
     });
 
+    fTotalPrice = roundCurrency(fTotalPrice);
+    iStoreCount = countStores(aMatchedItems);
+    iExtraStoreCount = Math.max(iStoreCount - 1, 0);
+    fSavingsComparedToBestStore = roundCurrency(oBestStore.totalPrice - fTotalPrice);
+    fTotalExtraStorePenalty = roundCurrency(iExtraStoreCount * fExtraStorePenalty);
+    fEffectiveSavings = roundCurrency(fSavingsComparedToBestStore - fTotalExtraStorePenalty);
+
     return {
-      totalPrice: roundCurrency(fTotalPrice),
-      savingsComparedToBestStore: roundCurrency(oBestStore.totalPrice - fTotalPrice),
-      storeCount: countStores(aMatchedItems),
+      totalPrice: fTotalPrice,
+      savingsComparedToBestStore: fSavingsComparedToBestStore,
+      effectiveSavings: fEffectiveSavings,
+      extraStoreCount: iExtraStoreCount,
+      extraStorePenalty: fExtraStorePenalty,
+      totalExtraStorePenalty: fTotalExtraStorePenalty,
+      isWorthwhile: fEffectiveSavings > 0,
+      storeCount: iStoreCount,
       stores: buildSplitStores(aMatchedItems),
       matchedItems: aMatchedItems,
       missingItems: aMissingItems
@@ -169,6 +187,14 @@ sap.ui.define([], function () {
     });
 
     return Object.keys(mStoreIds).length;
+  }
+
+  function getExtraStorePenalty(oOptions) {
+    if (!oOptions || typeof oOptions.extraStorePenalty !== "number") {
+      return 7;
+    }
+
+    return oOptions.extraStorePenalty;
   }
 
   function haveCompatibleUnits(sLeftUnit, sRightUnit) {

@@ -76,13 +76,14 @@ sap.ui.define([
       var oModel = this.getView().getModel();
       var aItems = oModel.getProperty("/items");
       var aOffers = oModel.getProperty("/offers");
+      var oSettings = oModel.getProperty("/optimizationSettings");
 
       if (!aItems.length) {
         MessageToast.show("Bitte lege zuerst Artikel in die Einkaufsliste.");
         return;
       }
 
-      oModel.setProperty("/optimizationResult", ShoppingOptimizer.optimize(aItems, aOffers));
+      oModel.setProperty("/optimizationResult", ShoppingOptimizer.optimize(aItems, aOffers, oSettings));
     },
 
     _clearOptimizationResult: function () {
@@ -97,6 +98,11 @@ sap.ui.define([
         splitPlan: {
           totalPrice: 0,
           savingsComparedToBestStore: 0,
+          effectiveSavings: 0,
+          extraStoreCount: 0,
+          extraStorePenalty: 7,
+          totalExtraStorePenalty: 0,
+          isWorthwhile: false,
           storeCount: 0,
           stores: [],
           matchedItems: [],

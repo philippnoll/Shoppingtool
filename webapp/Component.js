@@ -20,6 +20,9 @@ sap.ui.define([
         productCatalog: ProductCatalog,
         productSuggestions: ProductCatalog,
         offers: MockOffers,
+        optimizationSettings: {
+          extraStorePenalty: 7
+        },
         optimizationResult: {
           hasResult: false,
           bestStore: {
@@ -31,6 +34,11 @@ sap.ui.define([
           splitPlan: {
             totalPrice: 0,
             savingsComparedToBestStore: 0,
+            effectiveSavings: 0,
+            extraStoreCount: 0,
+            extraStorePenalty: 7,
+            totalExtraStorePenalty: 0,
+            isWorthwhile: false,
             storeCount: 0,
             stores: [],
             matchedItems: [],

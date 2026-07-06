@@ -205,11 +205,11 @@
                   <ObjectNumber
                     number="{/optimizationResult/splitPlan/totalPrice}"
                     unit="EUR"
-                    state="{= ${/optimizationResult/splitPlan/savingsComparedToBestStore} > 0 ? 'Success' : 'None' }" />
+                    state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }" />
                 </Toolbar>
                 <ObjectStatus
-                  text="{= ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Ersparnis ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR' }"
-                  state="{= ${/optimizationResult/splitPlan/savingsComparedToBestStore} > 0 ? 'Success' : 'Information' }"
+                  text="{= ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Preisersparnis ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR, Zusatzladen-Abzug ' + ${/optimizationResult/splitPlan/totalExtraStorePenalty} + ' EUR, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR' }"
+                  state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }"
                   class="sapUiSmallMarginBottom" />
                 <List
                   items="{/optimizationResult/splitPlan/stores}"

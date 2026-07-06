@@ -259,6 +259,56 @@ filterSuggests="false"
 
 Ohne diese Einstellung filtert `sap.m.Input` die Vorschlaege nach dem Tippen nochmal selbst. Das ist fuer Prefix-Suche okay, wuerde aber Fuzzy-Treffer wie `tomatn -> Tomaten` wieder ausblenden.
 
+## Optimierung: Preisersparnis Ist Nicht Gleich Empfehlung
+
+Die Split-Optimierung sucht die guenstigsten passenden Angebote ueber alle Laeden hinweg.
+
+Dabei entstehen zwei verschiedene Werte:
+
+```js
+savingsComparedToBestStore
+```
+
+Das ist die reine Preisersparnis gegenueber dem besten einzelnen Laden.
+
+```js
+effectiveSavings
+```
+
+Das ist die alltagstaugliche Ersparnis nach Abzug fuer Zusatzlaeden.
+
+Beispiel:
+
+```text
+Split spart am Warenkorb:       0,20 EUR
+1 Zusatzladen kostet pauschal:  7,00 EUR
+Effektiv:                      -6,80 EUR
+```
+
+Dann ist der Split zwar rechnerisch billiger, aber nicht empfehlenswert.
+
+Die Pauschale liegt aktuell im Model:
+
+```js
+optimizationSettings: {
+  extraStorePenalty: 7
+}
+```
+
+Der Controller liest diese Einstellung und gibt sie an die Optimierungslogik weiter:
+
+```js
+var oSettings = oModel.getProperty("/optimizationSettings");
+ShoppingOptimizer.optimize(aItems, aOffers, oSettings);
+```
+
+Die View berechnet diese Werte nicht selbst. Sie zeigt nur die fertigen Felder aus dem Model an:
+
+```xml
+{/optimizationResult/splitPlan/effectiveSavings}
+{/optimizationResult/splitPlan/isWorthwhile}
+```
+
 ## Unser Datenfluss Beim Erkennen
 
 ```text

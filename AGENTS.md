@@ -38,6 +38,7 @@ The long-term app is more than a shopping-list frontend. It should become a priv
 - Store scraped supermarket offer data over time.
 - Track historical prices and price trends.
 - Compare current offers and recommend the best supermarket or supermarket combination for a shopping list.
+- Split recommendations should consider real-world friction, not only item prices. Current heuristic: each additional store has a default penalty of 7 EUR, based on the user's ID.Buzz/time/nerv factor discussion.
 - Run on the user's NAS eventually.
 - Also become a recipe book and weekly meal-planning tool.
 - Recipes should be saved because the user currently plans weekly recipes but loses that planning history.
@@ -82,6 +83,7 @@ Save final purchase list and prices
 - `webapp/model/ProductCatalog.js`: product catalog.
 - `webapp/model/ProductSearch.js`: MiniSearch wrapper.
 - `webapp/model/ProductRecognition.js`: free-text recognition.
+- `webapp/model/ShoppingOptimizer.js`: offer matching, single-store comparison, split recommendation, and extra-store heuristic.
 - `docs/ui5-basics.md`: learning notes for the user.
 
 ## Current Git State At Handoff
