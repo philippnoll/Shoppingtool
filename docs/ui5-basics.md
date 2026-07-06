@@ -339,6 +339,7 @@ Output:
 ```text
 hasResult = steuert, ob die Ergebnisanzeige sichtbar ist
 bestStore = bester Laden fuer diese Liste
+splitPlan = guenstigste Artikelverteilung ueber mehrere Laeden
 stores    = bewertete Laeden mit Treffern, fehlenden Artikeln und Preis
 ```
 
@@ -358,6 +359,18 @@ optimizationResult: {
 ```
 
 Dadurch hat die View stabile Binding-Pfade. Sie kann also immer auf `/optimizationResult/bestStore/missingItems` binden, ohne dass `bestStore` zwischendurch `null` ist.
+
+Die Optimierung hat jetzt zwei Blickwinkel:
+
+```text
+bestStore
+  ein einzelner Laden, der moeglichst alles abdeckt
+
+splitPlan
+  pro Artikel das guenstigste passende Angebot ueber alle Laeden
+```
+
+Der Split ist noch eine reine Preisrechnung. Zeitkosten, Fahrtkosten und eine Strafe fuer mehrere Laeden kommen spaeter als Heuristik dazu.
 
 Wichtig: `offers` kommt aktuell aus `MockOffers.js`. Das ist absichtlich so geschnitten, dass spaeter Scraper-Daten oder Bon-Daten im gleichen Format liefern koennen.
 

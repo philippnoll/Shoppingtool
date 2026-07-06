@@ -195,6 +195,31 @@
                     info="{= ${totalPrice} + ' EUR' }"
                     infoState="Success" />
                 </List>
+                <Toolbar
+                  design="Transparent"
+                  class="sapUiSmallMarginTop">
+                  <Title
+                    text="Split-Empfehlung"
+                    level="H3" />
+                  <ToolbarSpacer />
+                  <ObjectNumber
+                    number="{/optimizationResult/splitPlan/totalPrice}"
+                    unit="EUR"
+                    state="{= ${/optimizationResult/splitPlan/savingsComparedToBestStore} > 0 ? 'Success' : 'None' }" />
+                </Toolbar>
+                <ObjectStatus
+                  text="{= ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Ersparnis ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR' }"
+                  state="{= ${/optimizationResult/splitPlan/savingsComparedToBestStore} > 0 ? 'Success' : 'Information' }"
+                  class="sapUiSmallMarginBottom" />
+                <List
+                  items="{/optimizationResult/splitPlan/stores}"
+                  noDataText="Keine Split-Angebote">
+                  <StandardListItem
+                    title="{storeName}"
+                    description="{= ${matchedItems}.length + ' Artikel' }"
+                    info="{= ${totalPrice} + ' EUR' }"
+                    infoState="Information" />
+                </List>
               </VBox>
             </Panel>
           </VBox>

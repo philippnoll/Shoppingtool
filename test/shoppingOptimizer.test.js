@@ -83,3 +83,30 @@ test("matches liter shopping items with milliliter offers", function () {
   assert.equal(oResult.bestStore.matchedItems[0].packages, 3);
   assert.equal(oResult.bestStore.matchedItems[0].totalPrice, 2.07);
 });
+
+test("builds a split plan from the cheapest matching offers across stores", function () {
+  const oResult = ShoppingOptimizer.optimize([
+    { id: 1, productKey: "butter", name: "Butter", quantity: 2, unit: "Stk" },
+    { id: 2, productKey: "milch", name: "Milch", quantity: 4, unit: "l" },
+    { id: 3, productKey: "tomaten", name: "Tomaten", quantity: 500, unit: "g" }
+  ], MockOffers);
+
+  assert.equal(oResult.bestStore.storeId, "lidl-gronauerstrasse-48599");
+  assert.equal(oResult.bestStore.totalPrice, 9.43);
+  assert.equal(oResult.splitPlan.totalPrice, 9.23);
+  assert.equal(oResult.splitPlan.savingsComparedToBestStore, 0.2);
+  assert.equal(oResult.splitPlan.storeCount, 2);
+  assert.deepEqual(oResult.splitPlan.stores.map(function (oStore) {
+    return oStore.storeId;
+  }), ["aldi-gronau", "lidl-gronauerstrasse-48599"]);
+});
+
+test("reports missing items in split plans", function () {
+  const oResult = ShoppingOptimizer.optimize([
+    { id: 1, productKey: "wasser", name: "Wasser", quantity: 1, unit: "Stk" }
+  ], MockOffers);
+
+  assert.equal(oResult.splitPlan.totalPrice, 0);
+  assert.equal(oResult.splitPlan.storeCount, 0);
+  assert.equal(oResult.splitPlan.missingItems.length, 1);
+});

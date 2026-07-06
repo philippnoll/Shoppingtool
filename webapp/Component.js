@@ -28,6 +28,14 @@ sap.ui.define([
             matchedItems: [],
             missingItems: []
           },
+          splitPlan: {
+            totalPrice: 0,
+            savingsComparedToBestStore: 0,
+            storeCount: 0,
+            stores: [],
+            matchedItems: [],
+            missingItems: []
+          },
           stores: []
         },
         items: [],

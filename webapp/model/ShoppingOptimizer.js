@@ -5,17 +5,15 @@ sap.ui.define([], function () {
     var aStores = buildStores(aOffers).map(function (oStore) {
       return evaluateStore(oStore, aItems);
     });
+    var oBestStore;
 
     aStores.sort(compareStoreResults);
+    oBestStore = aStores[0] || createEmptyStoreResult();
 
     return {
       hasResult: aStores.length > 0,
-      bestStore: aStores[0] || {
-        storeName: "",
-        totalPrice: 0,
-        matchedItems: [],
-        missingItems: []
-      },
+      bestStore: oBestStore,
+      splitPlan: buildSplitPlan(aItems, aOffers, oBestStore),
       stores: aStores
     };
   }
@@ -47,15 +45,13 @@ sap.ui.define([], function () {
     var fTotalPrice = 0;
 
     aItems.forEach(function (oItem) {
-      var oOffer = findOffer(oStore.offers, oItem);
-      var oMatchedItem;
+      var oMatchedItem = findBestMatchedItem(oStore.offers, oItem);
 
-      if (!oOffer) {
+      if (!oMatchedItem) {
         aMissingItems.push(oItem);
         return;
       }
 
-      oMatchedItem = buildMatchedItem(oItem, oOffer);
       aMatchedItems.push(oMatchedItem);
       fTotalPrice += oMatchedItem.totalPrice;
     });
@@ -70,10 +66,51 @@ sap.ui.define([], function () {
     };
   }
 
-  function findOffer(aOffers, oItem) {
-    return aOffers.find(function (oOffer) {
-      return oOffer.productKey === oItem.productKey && haveCompatibleUnits(oOffer.packageUnit, oItem.unit);
+  function buildSplitPlan(aItems, aOffers, oBestStore) {
+    var aMatchedItems = [];
+    var aMissingItems = [];
+    var fTotalPrice = 0;
+
+    aItems.forEach(function (oItem) {
+      var oMatchedItem = findBestMatchedItem(aOffers, oItem);
+
+      if (!oMatchedItem) {
+        aMissingItems.push(oItem);
+        return;
+      }
+
+      aMatchedItems.push(oMatchedItem);
+      fTotalPrice += oMatchedItem.totalPrice;
     });
+
+    return {
+      totalPrice: roundCurrency(fTotalPrice),
+      savingsComparedToBestStore: roundCurrency(oBestStore.totalPrice - fTotalPrice),
+      storeCount: countStores(aMatchedItems),
+      stores: buildSplitStores(aMatchedItems),
+      matchedItems: aMatchedItems,
+      missingItems: aMissingItems
+    };
+  }
+
+  function findBestMatchedItem(aOffers, oItem) {
+    var oBestMatchedItem = null;
+
+    aOffers.forEach(function (oOffer) {
+      var oMatchedItem;
+
+      if (oOffer.productKey !== oItem.productKey || !haveCompatibleUnits(oOffer.packageUnit, oItem.unit)) {
+        return;
+      }
+
+      oMatchedItem = buildMatchedItem(oItem, oOffer);
+
+      if (!oBestMatchedItem || oMatchedItem.totalPrice < oBestMatchedItem.totalPrice) {
+        oBestMatchedItem = oMatchedItem;
+      }
+    });
+
+    return oBestMatchedItem;
   }
 
   function buildMatchedItem(oItem, oOffer) {
@@ -86,6 +123,9 @@ sap.ui.define([], function () {
       itemId: oItem.id,
       productKey: oItem.productKey,
       name: oItem.name,
+      storeId: oOffer.storeId,
+      storeName: oOffer.storeName,
+      chain: oOffer.chain,
       requestedQuantity: oItem.quantity,
       requestedUnit: oItem.unit,
       offerName: oOffer.offerName,
@@ -95,6 +135,40 @@ sap.ui.define([], function () {
       packages: iPackages,
       totalPrice: fTotalPrice
     };
+  }
+
+  function buildSplitStores(aMatchedItems) {
+    var mStores = {};
+
+    aMatchedItems.forEach(function (oMatchedItem) {
+      if (!mStores[oMatchedItem.storeId]) {
+        mStores[oMatchedItem.storeId] = {
+          storeId: oMatchedItem.storeId,
+          storeName: oMatchedItem.storeName,
+          chain: oMatchedItem.chain,
+          totalPrice: 0,
+          matchedItems: []
+        };
+      }
+
+      mStores[oMatchedItem.storeId].matchedItems.push(oMatchedItem);
+      mStores[oMatchedItem.storeId].totalPrice += oMatchedItem.totalPrice;
+    });
+
+    return Object.keys(mStores).map(function (sStoreId) {
+      mStores[sStoreId].totalPrice = roundCurrency(mStores[sStoreId].totalPrice);
+      return mStores[sStoreId];
+    });
+  }
+
+  function countStores(aMatchedItems) {
+    var mStoreIds = {};
+
+    aMatchedItems.forEach(function (oMatchedItem) {
+      mStoreIds[oMatchedItem.storeId] = true;
+    });
+
+    return Object.keys(mStoreIds).length;
   }
 
   function haveCompatibleUnits(sLeftUnit, sRightUnit) {
@@ -143,6 +217,15 @@ sap.ui.define([], function () {
 
   function roundCurrency(fValue) {
     return Math.round((fValue + Number.EPSILON) * 100) / 100;
+  }
+
+  function createEmptyStoreResult() {
+    return {
+      storeName: "",
+      totalPrice: 0,
+      matchedItems: [],
+      missingItems: []
+    };
   }
 
   return {
