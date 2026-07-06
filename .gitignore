@@ -5,3 +5,5 @@ dist/
 .config/
 .eslintcache
 npm-debug.log*
+data/raw/offers/*
+!data/raw/offers/.gitkeep

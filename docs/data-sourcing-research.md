@@ -83,13 +83,16 @@ Einschraenkung: Bons zeigen vergangene Einkaeufe, nicht zukuenftige Angebote. Ab
 
 Nicht direkt Datenbank bauen.
 
-Erst einen kleinen Scraper-/Importer-Spike bauen:
+Erst einen kleinen Scraper-/Importer-Spike bauen. Wir starten mit Lidl, weil Lidl in der ersten echten Markt-Kohorte des Users liegt.
 
 ```text
-scripts/fetch-offers.js
+scripts/discover-lidl-offers.js
         |
         v
-data/raw/offers/lidl-sample.json
+data/raw/offers/lidl/*.html
+        |
+        v
+data/raw/offers/lidl/*.analysis.json
         |
         v
 data/normalized/offers.json
@@ -104,6 +107,59 @@ Der Spike darf erstmal nur ein JSON-File erzeugen. Ziel ist nicht Perfektion, so
 2. Welche Felder bekommen wir wirklich?
 3. Wie stark unterscheiden sich die Haendler?
 4. Was muessen wir normalisieren?
+
+## Erste Lokale Markt-Kohorte
+
+Die erste Kohorte ist nicht "Supermaerkte allgemein", sondern die wirklich relevanten Maerkte im Stadtteil Epe:
+
+- Lidl
+- ALDI Nord
+- K+K
+- PENNY
+
+Diese Maerkte sind in `data/stores.json` als Arbeitsstand erfasst. Die genauen Adressen koennen spaeter korrigiert werden.
+
+Wichtig fuer die Architektur: Wir werden sehr wahrscheinlich pro Kette einen eigenen Adapter brauchen.
+
+```text
+LidlAdapter
+AldiNordAdapter
+KkAdapter
+PennyAdapter
+```
+
+Alle Adapter sollen spaeter trotzdem dasselbe interne Angebotsformat liefern.
+
+## Lidl Discovery: Erster Befund
+
+Lidl ist ein guter erster Kandidat, weil die Prospektseite maschinenlesbare Hinweise auf aktuelle Prospekte enthaelt.
+
+Aktueller technischer Pfad:
+
+```text
+https://www.lidl.de/c/online-prospekte/s10005610
+        |
+        v
+JSON-LD OfferCatalog mit Prospekt-URLs
+        |
+        v
+Lidl Leaflet App auf lidl.leaflets.schwarz
+        |
+        v
+https://endpoints.leaflets.schwarz/v4/flyer?flyer_identifier=...&region_id=0
+```
+
+Der interne Flyer-Endpunkt liefert JSON. Ein Testabruf fuer den Aktionsprospekt `06.07.2026 - 11.07.2026` ergab:
+
+- 62 Prospektseiten
+- 136 strukturierte Produktobjekte
+- 202 Links auf Prospektseiten
+- 50 Rezeptlinks
+- PDF-URL fuer den Prospekt
+
+Wichtig: Die strukturierten Produktobjekte sind nicht automatisch eine perfekte Lebensmittelliste. Viele klassische Lebensmittelangebote stehen eher in `pages[].keyWords` und `pages[].altText`, zum Beispiel Tomaten, Kartoffeln, Butter oder Maggi Fix.
+
+Das heisst: Lidl ist technisch erreichbar, aber wir brauchen sehr wahrscheinlich noch einen Lidl-spezifischen Normalizer, der aus Flyer-JSON, Seiten-Texten und eventuell PDF/Bilddaten unsere internen Angebote baut.
 
 ## Zieldatenformat Fuer Angebote
 

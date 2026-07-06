@@ -18,13 +18,16 @@ export default [
     }
   },
   {
-    files: ["test/**/*.js"],
+    files: ["test/**/*.js", "scripts/**/*.js"],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: "commonjs",
       globals: {
         __dirname: "readonly",
+        console: "readonly",
+        fetch: "readonly",
         global: "readonly",
+        process: "readonly",
         require: "readonly"
       }
     },

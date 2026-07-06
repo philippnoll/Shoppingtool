@@ -1,0 +1,48 @@
+[
+  {
+    "id": "lidl-gronauerstrasse-48599",
+    "chain": "Lidl",
+    "name": "Lidl Gronauer Strasse",
+    "street": "Gronauer Str. 120",
+    "postalCode": "48599",
+    "city": "Gronau-Epe",
+    "cohort": 1,
+    "priority": 1
+  },
+  {
+    "id": "aldi-nord-epe",
+    "chain": "ALDI Nord",
+    "name": "ALDI Nord Epe",
+    "postalCode": "48599",
+    "city": "Gronau-Epe",
+    "cohort": 1,
+    "priority": 2
+  },
+  {
+    "id": "kk-epe-west",
+    "chain": "K+K",
+    "name": "K+K Epe West",
+    "postalCode": "48599",
+    "city": "Gronau-Epe",
+    "cohort": 1,
+    "priority": 3
+  },
+  {
+    "id": "kk-epe-ost",
+    "chain": "K+K",
+    "name": "K+K Epe Ost",
+    "postalCode": "48599",
+    "city": "Gronau-Epe",
+    "cohort": 1,
+    "priority": 4
+  },
+  {
+    "id": "penny-epe",
+    "chain": "PENNY",
+    "name": "PENNY Epe",
+    "postalCode": "48599",
+    "city": "Gronau-Epe",
+    "cohort": 1,
+    "priority": 5
+  }
+]

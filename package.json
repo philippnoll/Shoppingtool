@@ -7,7 +7,8 @@
     "start": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve --open index.html",
     "serve": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 serve",
     "build": "UI5_DATA_DIR=.ui5-data XDG_CONFIG_HOME=.config ui5 build --all",
-    "lint": "eslint webapp test",
+    "discover:lidl": "node scripts/discover-lidl-offers.js",
+    "lint": "eslint webapp test scripts",
     "test": "node --test test/*.test.js"
   },
   "devDependencies": {
