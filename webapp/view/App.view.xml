@@ -31,33 +31,6 @@
           <f:DynamicPageHeader pinnable="false">
             <VBox class="sapUiResponsiveContentPadding shoppingContent">
               <Label
-                text="Einzelprodukt suchen"
-                labelFor="quickProductInput" />
-              <HBox class="quickInputRow">
-                <Input
-                  id="quickProductInput"
-                  value="{/quickProductText}"
-                  placeholder="z.B. Butter"
-                  showSuggestion="true"
-                  filterSuggests="false"
-                  suggestionItems="{/productSuggestions}"
-                  suggest=".onSuggestProduct"
-                  suggestionItemSelected=".onProductSuggestionSelected"
-                  submit=".onAppendQuickProduct"
-                  width="100%">
-                  <suggestionItems>
-                    <core:Item
-                      key="{key}"
-                      text="{name}" />
-                  </suggestionItems>
-                </Input>
-                <Button
-                  text="Zur Eingabe"
-                  icon="sap-icon://add"
-                  press=".onAppendQuickProduct" />
-              </HBox>
-
-              <Label
                 text="Produkte"
                 labelFor="productInput" />
               <TextArea

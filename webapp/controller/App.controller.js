@@ -2,9 +2,8 @@ sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/m/MessageToast",
   "shoppingtool/model/ProductRecognition",
-  "shoppingtool/model/ProductSearch",
   "shoppingtool/model/ShoppingOptimizer"
-], function (Controller, MessageToast, ProductRecognition, ProductSearch, ShoppingOptimizer) {
+], function (Controller, MessageToast, ProductRecognition, ShoppingOptimizer) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -29,36 +28,6 @@ sap.ui.define([
       this._clearOptimizationResult();
 
       MessageToast.show(aRecognizedItems.length + " Artikel erkannt.");
-    },
-
-    onProductSuggestionSelected: function (oEvent) {
-      var oSelectedItem = oEvent.getParameter("selectedItem");
-
-      if (oSelectedItem) {
-        this.getView().getModel().setProperty("/quickProductText", oSelectedItem.getText());
-      }
-    },
-
-    onSuggestProduct: function (oEvent) {
-      var oModel = this.getView().getModel();
-      var sValue = oEvent.getParameter("suggestValue");
-      var aProductCatalog = oModel.getProperty("/productCatalog");
-
-      oModel.setProperty("/productSuggestions", ProductSearch.search(aProductCatalog, sValue));
-    },
-
-    onAppendQuickProduct: function () {
-      var oModel = this.getView().getModel();
-      var sQuickProductText = (oModel.getProperty("/quickProductText") || "").trim();
-      var sInputText = (oModel.getProperty("/inputText") || "").trim();
-
-      if (!sQuickProductText) {
-        MessageToast.show("Bitte waehle oder tippe zuerst ein Produkt.");
-        return;
-      }
-
-      oModel.setProperty("/inputText", sInputText ? sInputText + ", " + sQuickProductText : sQuickProductText);
-      oModel.setProperty("/quickProductText", "");
     },
 
     onDeleteItem: function (oEvent) {

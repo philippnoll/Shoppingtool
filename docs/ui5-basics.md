@@ -158,106 +158,37 @@ je nach Zeile:
 /items/2/name
 ```
 
-## Suggestions Sind Auch Binding
+## Produkterkennung Als Logikmodul
 
-Das schnelle Produktfeld nutzt `sap.m.Input` mit UI5-Suggestions.
+Die aktuelle App hat kein separates Einzelprodukt-Suchfeld mehr. Der Hauptweg ist:
 
-```xml
-<Input
-  value="{/quickProductText}"
-  showSuggestion="true"
-  suggestionItems="{/productCatalog}">
-  <suggestionItems>
-    <core:Item
-      key="{key}"
-      text="{name}" />
-  </suggestionItems>
-</Input>
+```text
+Freitext eingeben
+        |
+        v
+Erkennen druecken
+        |
+        v
+ProductRecognition.parse(...)
+        |
+        v
+Items ins Model schreiben
 ```
 
-Die wichtigen Teile:
+Die View kennt den Produktkatalog nicht direkt. Sie bindet nur an `/inputText` und `/items`.
 
 ```xml
-value="{/quickProductText}"
+<TextArea value="{/inputText}" />
+<List items="{/items}">
 ```
 
-bindet den aktuell getippten Wert an das Model.
-
-```xml
-suggestionItems="{/productCatalog}"
-```
-
-sagt UI5: Erzeuge Vorschlaege aus dem Array `/productCatalog`.
-
-```xml
-text="{name}"
-```
-
-ist wieder relativ zum jeweiligen Katalogeintrag.
-
-Beispiel:
+Der Controller ruft die Erkennungslogik auf:
 
 ```js
-productCatalog: [
-  { key: "butter", name: "Butter" },
-  { key: "milch", name: "Milch" }
-]
+var aRecognizedItems = ProductRecognition.parse(sInput);
 ```
 
-Dann erzeugt UI5 intern Vorschlaege fuer `Butter` und `Milch`.
-
-Der Katalog selbst liegt nicht direkt in der View. Er wird als UI5-Modul geladen.
-
-```js
-sap.ui.define([
-  "shoppingtool/model/ProductCatalog"
-], function (ProductCatalog) {
-  // ProductCatalog ist der Rueckgabewert aus ProductCatalog.js
-});
-```
-
-`ProductCatalog.js` gibt ein Array zurueck:
-
-```js
-return [
-  { key: "butter", name: "Butter" },
-  { key: "milch", name: "Milch" }
-];
-```
-
-`Component.js` schreibt dieses Array ins Model:
-
-```js
-productCatalog: ProductCatalog
-```
-
-Danach kann die View es ueber einen Model-Pfad verwenden:
-
-```xml
-suggestionItems="{/productSuggestions}"
-```
-
-`/productCatalog` ist der komplette Katalog. `/productSuggestions` ist die aktuell angezeigte Trefferliste. Beim Tippen ruft das Input-Control das `suggest`-Event aus:
-
-```xml
-suggest=".onSuggestProduct"
-```
-
-Der Controller setzt dann neue Vorschlaege:
-
-```js
-oModel.setProperty("/productSuggestions", ProductSearch.search(aProductCatalog, sValue));
-```
-
-Die View muss nicht wissen, ob dahinter MiniSearch oder eine andere Suchlogik steckt.
-
-Wichtig bei eigener Suchlogik:
-
-```xml
-filterSuggests="false"
-```
-
-Ohne diese Einstellung filtert `sap.m.Input` die Vorschlaege nach dem Tippen nochmal selbst. Das ist fuer Prefix-Suche okay, wuerde aber Fuzzy-Treffer wie `tomatn -> Tomaten` wieder ausblenden.
+`ProductRecognition.js` darf intern `ProductCatalog` und `ProductSearch` verwenden. Das ist Absicht: Die View soll nicht wissen muessen, wie Fuzzy Matching funktioniert.
 
 ## Optimierung: Preisersparnis Ist Nicht Gleich Empfehlung
 
