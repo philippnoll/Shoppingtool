@@ -72,12 +72,14 @@ sap.ui.define([], function () {
 
   function findOffer(aOffers, oItem) {
     return aOffers.find(function (oOffer) {
-      return oOffer.productKey === oItem.productKey && oOffer.packageUnit === oItem.unit;
+      return oOffer.productKey === oItem.productKey && haveCompatibleUnits(oOffer.packageUnit, oItem.unit);
     });
   }
 
   function buildMatchedItem(oItem, oOffer) {
-    var iPackages = Math.ceil(oItem.quantity / oOffer.packageQuantity);
+    var fRequestedQuantity = convertToBaseQuantity(oItem.quantity, oItem.unit);
+    var fPackageQuantity = convertToBaseQuantity(oOffer.packageQuantity, oOffer.packageUnit);
+    var iPackages = Math.ceil(fRequestedQuantity / fPackageQuantity);
     var fTotalPrice = roundCurrency(iPackages * oOffer.price);
 
     return {
@@ -93,6 +95,42 @@ sap.ui.define([], function () {
       packages: iPackages,
       totalPrice: fTotalPrice
     };
+  }
+
+  function haveCompatibleUnits(sLeftUnit, sRightUnit) {
+    return getUnitFamily(sLeftUnit) === getUnitFamily(sRightUnit);
+  }
+
+  function getUnitFamily(sUnit) {
+    var sNormalizedUnit = normalizeUnit(sUnit);
+
+    if (sNormalizedUnit === "g" || sNormalizedUnit === "kg") {
+      return "weight";
+    }
+
+    if (sNormalizedUnit === "ml" || sNormalizedUnit === "l") {
+      return "volume";
+    }
+
+    if (sNormalizedUnit === "stk") {
+      return "piece";
+    }
+
+    return sNormalizedUnit;
+  }
+
+  function convertToBaseQuantity(fQuantity, sUnit) {
+    var sNormalizedUnit = normalizeUnit(sUnit);
+
+    if (sNormalizedUnit === "kg" || sNormalizedUnit === "l") {
+      return fQuantity * 1000;
+    }
+
+    return fQuantity;
+  }
+
+  function normalizeUnit(sUnit) {
+    return (sUnit || "").trim().toLowerCase();
   }
 
   function compareStoreResults(oLeft, oRight) {

@@ -361,6 +361,23 @@ Dadurch hat die View stabile Binding-Pfade. Sie kann also immer auf `/optimizati
 
 Wichtig: `offers` kommt aktuell aus `MockOffers.js`. Das ist absichtlich so geschnitten, dass spaeter Scraper-Daten oder Bon-Daten im gleichen Format liefern koennen.
 
+Der Optimizer kann einfache kompatible Einheiten vergleichen:
+
+```text
+1000 g  <-> 1 kg
+1.5 l   <-> 500 ml
+Stk     <-> Stk
+```
+
+Dafuer werden Mengen intern auf eine Basiseinheit umgerechnet:
+
+```text
+kg -> g
+l  -> ml
+```
+
+Das ist noch keine komplette Bon-Logik. Pfand, Rabatte, Kilopreise und gewichtete Bon-Positionen kommen spaeter als eigene Schritte.
+
 ```text
 MockOffers jetzt
         |

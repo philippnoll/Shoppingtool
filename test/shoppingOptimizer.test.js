@@ -41,3 +41,45 @@ test("calculates required packages from requested quantity", function () {
   assert.equal(oResult.bestStore.matchedItems[0].packages, 2);
   assert.equal(oResult.bestStore.matchedItems[0].totalPrice, 2.98);
 });
+
+test("matches gram shopping items with kilogram offers", function () {
+  const oResult = ShoppingOptimizer.optimize([
+    { id: 1, productKey: "bananen", name: "Bananen", quantity: 1500, unit: "g" }
+  ], [
+    {
+      storeId: "lidl-gronauerstrasse-48599",
+      storeName: "Lidl Gronauerstrasse",
+      chain: "Lidl",
+      productKey: "bananen",
+      offerName: "Bananen lose",
+      packageQuantity: 1,
+      packageUnit: "kg",
+      price: 1.29
+    }
+  ]);
+
+  assert.equal(oResult.bestStore.missingItems.length, 0);
+  assert.equal(oResult.bestStore.matchedItems[0].packages, 2);
+  assert.equal(oResult.bestStore.matchedItems[0].totalPrice, 2.58);
+});
+
+test("matches liter shopping items with milliliter offers", function () {
+  const oResult = ShoppingOptimizer.optimize([
+    { id: 1, productKey: "milch", name: "Milch", quantity: 1.5, unit: "l" }
+  ], [
+    {
+      storeId: "lidl-gronauerstrasse-48599",
+      storeName: "Lidl Gronauerstrasse",
+      chain: "Lidl",
+      productKey: "milch",
+      offerName: "Milch klein",
+      packageQuantity: 500,
+      packageUnit: "ml",
+      price: 0.69
+    }
+  ]);
+
+  assert.equal(oResult.bestStore.missingItems.length, 0);
+  assert.equal(oResult.bestStore.matchedItems[0].packages, 3);
+  assert.equal(oResult.bestStore.matchedItems[0].totalPrice, 2.07);
+});
