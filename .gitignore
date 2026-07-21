@@ -7,3 +7,5 @@ dist/
 npm-debug.log*
 data/raw/offers/*
 !data/raw/offers/.gitkeep
+data/normalized/flyers/lidl/*
+!data/normalized/flyers/lidl/.gitkeep

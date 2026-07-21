@@ -205,3 +205,35 @@ OpenFoodFactsAdapter
 ```
 
 Aber alle Adapter liefern am Ende dasselbe interne Format.
+
+## Lidl Normalizer: Erster Schritt
+
+Stand: 2026-07-21
+
+Der aktuelle Lidl-Aktionsprospekt `20.07.2026 - 25.07.2026` wurde erneut abgerufen. Der Flyer-Endpunkt lieferte:
+
+- 69 Prospektseiten
+- 142 strukturierte Produktobjekte
+- Seitentexte in `pages[].keyWords`
+- Seitenbeschreibungen in `pages[].altText`
+- Bild- und Zoom-URLs pro Prospektseite
+
+Die strukturierten Produktobjekte enthalten weiterhin ueberwiegend Non-Food-/Online-Produkte. Klassische Lebensmittel wie Romatomaten stehen im Seitentext, aber Preis und Packungsgroesse sind dort nicht verlaesslich als zusammengehoeriges Produktobjekt vorhanden.
+
+Der erste `LidlNormalizer` erzeugt deshalb noch keine fertigen Angebote. Er uebersetzt zunaechst nur Flyer-Metadaten und Seiten in eine stabile Zwischenstruktur:
+
+```text
+Lidl JSON
+  -> source, storeId, Zeitraum
+  -> sourcePage, rawKeywords, rawDescription, imageUrl
+```
+
+Ausfuehren mit:
+
+```bash
+npm run normalize:lidl -- data/raw/offers/lidl/<timestamp>.json
+```
+
+Das Ergebnis wird unter `data/normalized/flyers/lidl/` erzeugt und nicht versioniert. Fuer automatisierte Tests liegt nur ein kleiner, versionierter Ausschnitt echter Lidl-Felder unter `test/fixtures/`.
+
+Naechster Untersuchungsschritt: Produkt, Preis und Packungsgroesse auf einer Lebensmittel-Prospektseite korrekt einander zuordnen. Erst daraus entstehen Objekte, die der `ShoppingOptimizer` verwenden darf.

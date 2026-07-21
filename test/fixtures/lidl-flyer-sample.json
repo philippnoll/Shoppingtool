@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "flyer": {
+    "id": "lidl-flyer-test-id",
+    "name": "Aktionsprospekt",
+    "title": "20.07.2026 – 25.07.2026",
+    "startDate": "2026-07-18",
+    "endDate": "2026-07-25",
+    "offerStartDate": "2026-07-20",
+    "offerEndDate": "2026-07-25",
+    "flyerUrlAbsolute": "https://www.lidl.de/l/prospekte/aktionsprospekt-test/ar/0",
+    "pages": [
+      {
+        "id": "lidl-page-test-id",
+        "number": 3,
+        "keyWords": "Saison Highlight Romatomaten Lidl Plus -20%",
+        "altText": "Saisonale Obst- und Gemüse-Highlights wie Romatomaten.",
+        "image": "https://example.test/lidl-page-3.jpg",
+        "zoom": "https://example.test/lidl-page-3-zoom.jpg"
+      }
+    ]
+  }
+}
