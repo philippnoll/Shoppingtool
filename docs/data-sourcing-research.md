@@ -262,3 +262,26 @@ npm run extract:lidl-pdf -- /pfad/zum/lidl-prospekt.pdf
 ```
 
 Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der spaetere Angebotsparser bekommt fuer seine Tests nur kleine, gezielte Textausschnitte.
+
+### Textpositionen Aus Der PDF
+
+`pdftotext -bbox-layout` erzeugt neben dem Wortinhalt auch Koordinaten. Der erweiterte PDF-Extractor schreibt deshalb zwei Dateien:
+
+```text
+<prospekt>.txt        menschenlesbarer Layout-Text
+<prospekt>.bbox.html  Woerter und ihre x/y-Koordinaten
+```
+
+`LidlPdfLayoutParser` uebersetzt das XHTML mit `fast-xml-parser` in einfache JavaScript-Seiten und Textbloecke. Ein Block besitzt danach nur noch die fuer uns relevanten Daten:
+
+```js
+{
+  text: "Romatomaten",
+  xMin: 209.9662,
+  yMin: 87.561,
+  xMax: 265.2662,
+  yMax: 99.521
+}
+```
+
+Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die fachliche Heuristik konzentrieren: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?

@@ -17,15 +17,18 @@ async function main() {
 
   const sOutputName = path.basename(sPdfPath, path.extname(sPdfPath)) + ".txt";
   const sOutputPath = path.join(OUTPUT_DIR, sOutputName);
+  const sBboxOutputPath = path.join(OUTPUT_DIR, path.basename(sPdfPath, path.extname(sPdfPath)) + ".bbox.html");
 
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
   await execFile("pdftotext", ["-layout", sPdfPath, sOutputPath]);
+  await execFile("pdftotext", ["-bbox-layout", sPdfPath, sBboxOutputPath]);
 
   const oStats = await fs.stat(sOutputPath);
 
   console.log("Lidl PDF text extracted");
   console.log("Bytes:", oStats.size);
-  console.log("Output:", sOutputPath);
+  console.log("Layout text:", sOutputPath);
+  console.log("Positioned text:", sBboxOutputPath);
 }
 
 main().catch(function (oError) {

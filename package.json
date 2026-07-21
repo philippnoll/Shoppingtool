@@ -18,6 +18,7 @@
     "eslint": "^9.0.0"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.10.1",
     "minisearch": "^7.2.0"
   }
 }
