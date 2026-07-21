@@ -11,6 +11,9 @@ Prefer small commits, short explanations, and frequent UI5 binding checks.
 - Talk in German.
 - Explain UI5 concepts slowly and concretely.
 - Ask small understanding questions after important UI5 changes.
+- Detailed teaching, exercises, and understanding questions are primarily for UI5 topics such as XML views, bindings, controllers, components, and models.
+- Scraper, PDF parsing, normalization, database, and other infrastructure may be implemented in larger/faster iterations. Explain their purpose, data flow, important decisions, and results at a high level, but do not quiz the user on implementation details unless requested.
+- Document scraper and infrastructure decisions in the project so later agents can continue without repeating the discovery work.
 - Keep implementation steps small and commit them as separate learning units.
 - Do not run `git push`; the user handles pushes.
 - Tell the user when pushing is possible.
@@ -85,32 +88,52 @@ Save final purchase list and prices
 - `webapp/model/ProductRecognition.js`: free-text recognition.
 - `webapp/model/ShoppingOptimizer.js`: offer matching, single-store comparison, split recommendation, and extra-store heuristic.
 - `docs/ui5-basics.md`: learning notes for the user.
+- `docs/data-sourcing-research.md`: scraper research, data flow, source limitations, and normalization decisions.
+- `scripts/discover-lidl-offers.js`: downloads and analyzes Lidl source data.
+- `scripts/normalize-lidl-flyer.js`: converts raw Lidl flyer JSON into the stable intermediate flyer format.
+- `scripts/extract-lidl-pdf-text.js`: extracts readable and positioned PDF text with `pdftotext`.
+- `scripts/lib/LidlPdfLayoutParser.js`: converts positioned PDF XHTML into JavaScript pages and text blocks.
 
-## Current Git State At Handoff
+## Current Scraper State
 
-Latest local commit:
+Current local scraper commits:
 
 ```text
-7886421 Simplify shopping list purchased state
+c7f81f9 Parse Lidl PDF text positions
+0c7d8b7 Add Lidl PDF text extraction
+f92ab35 Add first Lidl flyer normalizer
+b590bae Add Lidl offer discovery spike
 ```
 
-The repo was `ahead 1` after that commit. The user said they handle pushing.
+At this milestone the repository was `ahead 3`. The user handles pushing.
+
+The Lidl source investigation established:
+
+- The leaflet endpoint provides flyer JSON, metadata, page text, images, and a PDF URL.
+- Structured JSON products are mostly non-food/online products and are not enough for grocery offers.
+- The PDF has an embedded text layer, so Lidl does not currently require OCR.
+- `pdftotext -bbox-layout` provides words and coordinates that can be used to associate product names, quantities, prices, and conditions spatially.
+- The pipeline still stops before finished optimizer-ready offer objects. The next infrastructure step is a tested Lidl offer-block heuristic over positioned text.
 
 ## Verified Commands
 
-Both were green after the latest changes:
+These were green after the latest scraper changes:
 
 ```bash
+npm test
 npm run lint
 npm run build
 ```
 
+`npm audit --omit=dev` reported zero production vulnerabilities after adding `fast-xml-parser`.
+
 ## Next Useful Steps
 
-- Let the user test the purchased checkbox behavior visually.
-- If they confirm the UX, a good next small step is improving the free-text parser for common grocery input:
-  - `2 butter`
-  - `2x butter`
-  - `2 x butter`
-  - comma, semicolon, and newline separated entries
-- Recipe book, weekly recipe planning, persistence, scraper, supermarket comparison, and NAS hosting are future phases.
+- Continue the Lidl infrastructure without detailed teaching questions:
+  - parse positioned PDF blocks into raw Lidl offer candidates;
+  - retain regular price, Lidl Plus price, quantity, unit, source page, and validity;
+  - map raw product names to `productKey` only in a separate product-matching step;
+  - test the result against several real food pages, not only Romatomaten;
+  - hand optimizer-ready offers to `ShoppingOptimizer` only after the fields are reliable.
+- Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
+- Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
