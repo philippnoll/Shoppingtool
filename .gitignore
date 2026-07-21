@@ -9,3 +9,5 @@ data/raw/offers/*
 !data/raw/offers/.gitkeep
 data/normalized/flyers/lidl/*
 !data/normalized/flyers/lidl/.gitkeep
+data/normalized/offers/lidl/*
+!data/normalized/offers/lidl/.gitkeep

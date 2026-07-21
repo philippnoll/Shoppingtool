@@ -285,3 +285,42 @@ Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Ro
 ```
 
 Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die fachliche Heuristik konzentrieren: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?
+
+## Lidl Angebotskandidaten
+
+`LidlOfferCandidateParser` erzeugt aus positionierten Textbloecken rohe Angebotskandidaten. Die aktuelle Heuristik unterstuetzt:
+
+- feste Packungen wie `Je 500 g`
+- Multipacks wie `10x 200 ml`
+- Kiloware mit `kg-Preis`
+- Beispielgewichte wie `Ca. 250 g`
+- Angebotspreis und hoeheren Vergleichspreis
+- Lidl-Plus-Preise als eigene Preisart
+- Produktnamen, die durch PDF-Wortumbrueche getrennt wurden
+
+Die Zuordnung basiert auf Spalten, Abstaenden und Lesereihenfolge. Unsichere Kiloware bekommt eine niedrigere `confidence` als ein vollstaendiger Block aus Produktname, Menge und Preis.
+
+Getestet sind unter anderem zwei echte, unterschiedlich aufgebaute Seiten:
+
+- Seite 3 mit Romatomaten, Multipack, Brot und Wassermelone
+- Seite 53 mit mehreren nebeneinanderliegenden Kilopreisen, Lidl Plus und Rumpsteak-Beispielgewicht
+
+Die komplette Kandidatendatei wird so erzeugt:
+
+```bash
+npm run parse:lidl-offers -- \
+  data/raw/offers/lidl/pdf-text/<prospekt>.bbox.html \
+  data/normalized/flyers/lidl/<prospekt>.normalized.json
+```
+
+Die Ausgabe unter `data/normalized/offers/lidl/` bleibt von Git ausgeschlossen. In dieser Stufe ist `productKey` absichtlich `null`. Erst ein separater ProductMatcher darf den Lidl-Namen einem internen Produkt zuordnen. Kandidaten ohne verlaessliches Produktmatching duerfen nicht an den `ShoppingOptimizer` weitergereicht werden.
+
+Messstand fuer den Aktionsprospekt `20.07.2026 - 25.07.2026`:
+
+- 69 gelesene PDF-Seiten
+- 200 Angebotskandidaten
+- 17 erkannte Lidl-Plus-Preise
+- 6 vorsichtiger bewertete Kilowaren-Treffer
+- keine leeren Namen, ungueltigen Preise oder Mengen
+- keine exakten Duplikate
+- noch keine gesetzten `productKey`-Werte

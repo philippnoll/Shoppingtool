@@ -31,8 +31,15 @@ function extractBlocks(oPage) {
 }
 
 function normalizeBlock(oBlock) {
+  const aWords = [];
   const aLines = toArray(oBlock.line).map(function (oLine) {
-    return toArray(oLine.word).map(readWord).join(" ");
+    const aLineWords = toArray(oLine.word).map(normalizeWord);
+
+    aWords.push.apply(aWords, aLineWords);
+
+    return aLineWords.map(function (oWord) {
+      return oWord.text;
+    }).join(" ");
   });
 
   return {
@@ -40,16 +47,25 @@ function normalizeBlock(oBlock) {
     xMin: oBlock.xMin,
     yMin: oBlock.yMin,
     xMax: oBlock.xMax,
-    yMax: oBlock.yMax
+    yMax: oBlock.yMax,
+    words: aWords
   };
 }
 
-function readWord(vWord) {
+function normalizeWord(vWord) {
   if (typeof vWord === "string" || typeof vWord === "number") {
-    return String(vWord);
+    return {
+      text: String(vWord)
+    };
   }
 
-  return String(vWord["#text"] || "");
+  return {
+    text: String(vWord["#text"] || ""),
+    xMin: vWord.xMin,
+    yMin: vWord.yMin,
+    xMax: vWord.xMax,
+    yMax: vWord.yMax
+  };
 }
 
 function comparePosition(oLeft, oRight) {

@@ -1,0 +1,35 @@
+{
+  "sourcePage": 53,
+  "blocks": [
+    { "text": "1.39*", "xMin": 368.4848, "yMin": 160.23, "xMax": 448.9388, "yMax": 224.61 },
+    { "text": "Auberginen, lose", "xMin": 243.7795, "yMin": 173.7492, "xMax": 310.1585, "yMax": 185.7092 },
+    { "text": "kg-Preis", "xMin": 353.4528, "yMin": 176.106, "xMax": 365.0028, "yMax": 211.89 },
+    { "text": "Cantaloupemelone", "xMin": 323.7166, "yMin": 234.264, "xMax": 398.3266, "yMax": 246.224 },
+    { "text": "Ursprung:\nSpanien/\nItalien.\nKlasse I\nkg-Preis", "xMin": 323.7166, "yMin": 247.0128, "xMax": 353.7166, "yMax": 292.2368 },
+    { "text": "1.49*", "xMin": 323.7166, "yMin": 305.6036, "xMax": 350.0366, "yMax": 327.0636 },
+    { "text": "Zucchini,\nlose", "xMin": 14.1429, "yMin": 328.2886, "xMax": 50.8129, "yMax": 351.7486 },
+    { "text": "Mit Lidl Plus", "xMin": 323.7166, "yMin": 329.4012, "xMax": 361.4296, "yMax": 337.2922 },
+    { "text": "-21%", "xMin": 234.2018, "yMin": 331.5088, "xMax": 274.2418, "yMax": 355.7888 },
+    { "text": "2.29", "xMin": 283.5158, "yMin": 338.6214, "xMax": 300.1478, "yMax": 349.0164 },
+    { "text": "Deutsche\nZwetschgen,\nlose", "xMin": 167.2442, "yMin": 343.7886, "xMax": 216.4342, "yMax": 378.7486 },
+    { "text": "0.99*", "xMin": 87.7964, "yMin": 352.4339, "xMax": 147.5084, "yMax": 395.3539 },
+    {
+      "text": "1.79* 1.19*",
+      "xMin": 230.1278,
+      "yMin": 352.4893,
+      "xMax": 370.355,
+      "yMax": 395.4093,
+      "words": [
+        { "text": "1.79*", "xMin": 230.1278, "yMin": 352.4893, "xMax": 283.7678, "yMax": 395.4093 },
+        { "text": "1.19*", "xMin": 320.315, "yMin": 352.4893, "xMax": 370.355, "yMax": 395.4093 }
+      ]
+    },
+    { "text": "Ursprung:\nDeutschland/\nSpanien\nKlasse I", "xMin": 14.1429, "yMin": 352.5693, "xMax": 54.6069, "yMax": 388.7213 },
+    { "text": "kg-Preis", "xMin": 77.8649, "yMin": 362.8946, "xMax": 85.6034, "yMax": 386.8739 },
+    { "text": "kg-Preis", "xMin": 220.1014, "yMin": 363.084, "xMax": 227.8399, "yMax": 386.9293 },
+    { "text": "kg-Preis", "xMin": 310.309, "yMin": 363.0848, "xMax": 318.0475, "yMax": 386.9301 },
+    { "text": "GRILLMEISTER\nRinder-Rumpsteak", "xMin": 227.401, "yMin": 464.5081, "xMax": 297.5223, "yMax": 487.9681 },
+    { "text": "Vom Jungbullen.\nVersch. Sorten.\nCa. 250 g\nkg-Preis = 20.49", "xMin": 227.4011, "yMin": 488.7889, "xMax": 277.2171, "yMax": 524.9409 },
+    { "text": "5.13*", "xMin": 167.3066, "yMin": 527.5287, "xMax": 218.7466, "yMax": 570.4487 }
+  ]
+}

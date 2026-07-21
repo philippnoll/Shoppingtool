@@ -10,6 +10,7 @@
     "discover:lidl": "node scripts/discover-lidl-offers.js",
     "extract:lidl-pdf": "node scripts/extract-lidl-pdf-text.js",
     "normalize:lidl": "node scripts/normalize-lidl-flyer.js",
+    "parse:lidl-offers": "node scripts/parse-lidl-offers.js",
     "lint": "eslint webapp test scripts",
     "test": "node --test test/*.test.js"
   },

@@ -14,7 +14,7 @@ test("converts positioned Lidl PDF words into sorted text blocks", function () {
   assert.equal(aPages.length, 1);
   assert.equal(aPages[0].sourcePage, 1);
   assert.equal(aPages[0].width, 467.717);
-  assert.deepEqual(aPages[0].blocks, [
+  assert.deepEqual(aPages[0].blocks.map(withoutWords), [
     {
       text: "Romatomaten",
       xMin: 209.9662,
@@ -37,4 +37,15 @@ test("converts positioned Lidl PDF words into sorted text blocks", function () {
       yMax: 220.37
     }
   ]);
+  assert.deepEqual(aPages[0].blocks[0].words, [
+    { text: "Romatomaten" }
+  ]);
 });
+
+function withoutWords(oBlock) {
+  const oResult = Object.assign({}, oBlock);
+
+  delete oResult.words;
+
+  return oResult;
+}
