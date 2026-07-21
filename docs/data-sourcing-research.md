@@ -237,3 +237,28 @@ npm run normalize:lidl -- data/raw/offers/lidl/<timestamp>.json
 Das Ergebnis wird unter `data/normalized/flyers/lidl/` erzeugt und nicht versioniert. Fuer automatisierte Tests liegt nur ein kleiner, versionierter Ausschnitt echter Lidl-Felder unter `test/fixtures/`.
 
 Naechster Untersuchungsschritt: Produkt, Preis und Packungsgroesse auf einer Lebensmittel-Prospektseite korrekt einander zuordnen. Erst daraus entstehen Objekte, die der `ShoppingOptimizer` verwenden darf.
+
+## Lidl PDF Statt OCR
+
+Der Flyer liefert zusaetzlich eine PDF mit eingebetteter Textebene. Ein Test mit `pdftotext -layout` auf Seite 3 konnte unter anderem diesen Zusammenhang erhalten:
+
+```text
+Romatomaten
+Je 500 g
+1 kg = 1.76
+0.88
+```
+
+Damit ist fuer Lidl vorerst keine Bild-OCR notwendig. Die neue Pipeline kann so aussehen:
+
+```text
+Flyer JSON -> PDF-URL -> PDF -> Layout-Text -> Lidl-Angebotsparser
+```
+
+Der lokale Rechner beziehungsweise spaeter die NAS braucht dafuer `pdftotext` aus dem Paket `poppler-utils`. Eine bereits heruntergeladene PDF wird so extrahiert:
+
+```bash
+npm run extract:lidl-pdf -- /pfad/zum/lidl-prospekt.pdf
+```
+
+Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der spaetere Angebotsparser bekommt fuer seine Tests nur kleine, gezielte Textausschnitte.
