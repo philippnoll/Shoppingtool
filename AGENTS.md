@@ -76,6 +76,7 @@ Save final purchase list and prices
 - JavaScript and XML views.
 - `JSONModel` only, no persistence yet.
 - MiniSearch is used for fuzzy product suggestions and recognition.
+- `webapp/model/ProductCatalog.js` is the single catalog source and can be loaded by UI5 and Node/CommonJS.
 - SAP/OpenUI5 standard theming should stay visible; avoid custom design-heavy UI.
 
 ## Important Files
@@ -135,7 +136,7 @@ npm run build
 ## Next Useful Steps
 
 - Continue the Lidl infrastructure without detailed teaching questions:
-  - share one product catalog between UI5 and Node without duplicating catalog data;
+  - add matcher metadata to the shared product catalog without duplicating catalog data;
   - map raw product names to `productKey` in a separate product-matching step;
   - preserve match type/confidence and leave uncertain matches as `null`;
   - explicitly test false positives such as `Tomatenketchup`, `Buttermilch`, and `Milchreis`;

@@ -1,4 +1,16 @@
-sap.ui.define([], function () {
+/* global module */
+
+(function (fnCreateCatalog) {
+  "use strict";
+
+  if (typeof sap !== "undefined" && sap.ui && sap.ui.define) {
+    sap.ui.define([], fnCreateCatalog);
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = fnCreateCatalog();
+  }
+}(function () {
   "use strict";
 
   return [
@@ -13,4 +25,4 @@ sap.ui.define([], function () {
     { key: "bananen", name: "Bananen", quantity: 1, unit: "kg", category: "Obst" },
     { key: "aepfel", name: "Aepfel", quantity: 1, unit: "kg", category: "Obst" }
   ];
-});
+}));

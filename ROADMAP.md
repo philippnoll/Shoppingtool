@@ -78,6 +78,8 @@ sparsam und nachvollziehbar abgerufen werden.
 ### 3. Produkterkennung
 
 - `ProductCatalog.js` enthaelt aktuell einen kleinen internen Produktkatalog.
+- Derselbe Katalog kann direkt als UI5-Modul und als Node/CommonJS-Modul geladen
+  werden. Es gibt dadurch nur eine Quelle fuer die Produktstammdaten.
 - `ProductSearch.js` kapselt MiniSearch.
 - Prefix- und Fuzzy-Suche erkennen unter anderem Tippfehler.
 - `ProductRecognition.js` trennt Freitext, liest Menge und Einheit und erzeugt
@@ -295,8 +297,8 @@ zuzuordnen.
 
 Arbeitspakete:
 
-1. Den Produktkatalog so strukturieren, dass UI5 und Node-Skripte dieselben
-   Stammdaten verwenden koennen. Katalogdaten nicht doppelt pflegen.
+1. Erledigt: `ProductCatalog.js` stellt UI5 und Node/CommonJS dieselben
+   Stammdaten bereit, ohne eine zweite Katalogdatei zu pflegen.
 2. Den kleinen Katalog um Synonyme, Handelsbezeichnungen und bei Bedarf
    Oberbegriffe erweitern.
 3. Einen separaten `ProductMatcher` bauen. Lidl-spezifisches PDF-Parsing und
@@ -544,15 +546,13 @@ Die naechste Harness sollte genau hier beginnen:
 1. `git status --short --branch` und die letzten Commits pruefen.
 2. `ProductCatalog.js`, `ProductSearch.js`, `ProductRecognition.js` und die
    Lidl-Kandidatenfixtures lesen.
-3. Einen gemeinsamen, von UI5 und Node nutzbaren Produktkatalog entwerfen,
-   ohne Daten zu duplizieren.
-4. Kleine Tests fuer die drei positiven und drei negativen Match-Beispiele
+3. Kleine Tests fuer die drei positiven und drei negativen Match-Beispiele
    zuerst schreiben.
-5. Den separaten ProductMatcher implementieren.
-6. Einen vorhandenen Lidl-Kandidatenlauf damit auswerten und Matchquote,
+4. Den separaten ProductMatcher implementieren.
+5. Einen vorhandenen Lidl-Kandidatenlauf damit auswerten und Matchquote,
    Nicht-Treffer und auffaellige Fehl-Treffer berichten.
-7. `npm test`, `npm run lint` und `npm run build` ausfuehren.
-8. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
+6. `npm test`, `npm run lint` und `npm run build` ausfuehren.
+7. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
    werden kann. Nicht selbst pushen.
 
 ## Wichtige Offene Entscheidungen
