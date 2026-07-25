@@ -14,7 +14,7 @@ sap.ui.define([], function () {
 
     var oMiniSearch = new window.MiniSearch({
       idField: "key",
-      fields: ["key", "name", "normalizedName"],
+      fields: ["key", "name", "normalizedName", "normalizedAliases"],
       storeFields: ["key", "name", "quantity", "unit", "category"],
       searchOptions: {
         prefix: true,
@@ -23,7 +23,8 @@ sap.ui.define([], function () {
     });
     var aSearchProducts = aProducts.map(function (oProduct) {
       return Object.assign({}, oProduct, {
-        normalizedName: normalizeSearchText(oProduct.name)
+        normalizedName: normalizeSearchText(oProduct.name),
+        normalizedAliases: (oProduct.aliases || []).map(normalizeSearchText).join(" ")
       });
     });
 
@@ -43,7 +44,10 @@ sap.ui.define([], function () {
   function fallbackSearch(aProducts, sQuery) {
     return aProducts.filter(function (oProduct) {
       return normalizeSearchText(oProduct.name).indexOf(sQuery) !== -1 ||
-        normalizeSearchText(oProduct.key).indexOf(sQuery) !== -1;
+        normalizeSearchText(oProduct.key).indexOf(sQuery) !== -1 ||
+        (oProduct.aliases || []).some(function (sAlias) {
+          return normalizeSearchText(sAlias).indexOf(sQuery) !== -1;
+        });
     });
   }
 

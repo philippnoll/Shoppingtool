@@ -4,8 +4,9 @@ Private OpenUI5 shopping-list and grocery optimization project.
 
 The current app combines a practical checklist, fuzzy product recognition and
 an initial store/split optimizer. A Lidl flyer pipeline already extracts raw
-offer candidates from positioned PDF text. Product matching, production-ready
-offer data and persistence are the next milestones.
+offer candidates from positioned PDF text. A conservative product matcher can
+map safe retailer names to the shared catalog. Production-ready offer data and
+persistence are the next milestones.
 
 The full project status, decisions and ordered implementation plan live in
 [ROADMAP.md](ROADMAP.md).
@@ -55,7 +56,7 @@ npx ui5 serve --port 8080
 
 ## Next Milestone
 
-Build a separate, conservative product matcher that maps retailer names such
-as `Romatomaten` or `MEGGLE Feine Butter` to internal product keys. Ambiguous
-names must remain unmatched. Only matched, validated and current offers may be
-passed to the optimizer.
+Apply the product matcher in a separate promotion stage. It should generate a
+review report, reject incomplete or expired candidates, handle conditional
+Lidl Plus prices explicitly and emit optimizer-ready data only for safe
+matches.

@@ -4,15 +4,6 @@ sap.ui.define([
 ], function (ProductCatalog, ProductSearch) {
   "use strict";
 
-  var PRODUCT_RULES = {
-    buttermann: { productKey: "butter", name: "Butter", quantity: 1, unit: "Stk", category: "Kuehlung" },
-    butter: { productKey: "butter", name: "Butter", quantity: 1, unit: "Stk", category: "Kuehlung" },
-    milch: { productKey: "milch", name: "Milch", quantity: 1, unit: "l", category: "Kuehlung" },
-    tomaten: { productKey: "tomaten", name: "Tomaten", quantity: 500, unit: "g", category: "Gemuese" },
-    tomate: { productKey: "tomaten", name: "Tomaten", quantity: 500, unit: "g", category: "Gemuese" },
-    brot: { productKey: "brot", name: "Brot", quantity: 1, unit: "Stk", category: "Backwaren" },
-    eier: { productKey: "eier", name: "Eier", quantity: 10, unit: "Stk", category: "Kuehlung" }
-  };
   var UNIT_ALIASES = {
     g: "g",
     kg: "kg",
@@ -39,20 +30,7 @@ sap.ui.define([
   function recognizeProduct(sRawText) {
     var oAmount = parseAmount(sRawText);
     var sProductText = oAmount.productText;
-    var sKey = normalizeKey(sProductText);
-    var oRule = PRODUCT_RULES[sKey];
-    var oSearchMatch = ProductSearch.search(ProductCatalog, sProductText)[0];
-
-    if (oRule) {
-      return {
-        rawText: sRawText,
-        productKey: oRule.productKey,
-        name: oRule.name,
-        quantity: getQuantity(oAmount, oRule.quantity),
-        unit: getUnit(oAmount, oRule.unit),
-        category: oRule.category
-      };
-    }
+    var oSearchMatch = findExactCatalogProduct(sProductText) || ProductSearch.search(ProductCatalog, sProductText)[0];
 
     if (oSearchMatch) {
       return {
@@ -121,7 +99,17 @@ sap.ui.define([
   function hasProductMatch(sRawText) {
     var sProductText = parseAmount(sRawText).productText;
 
-    return Boolean(PRODUCT_RULES[normalizeKey(sProductText)] || ProductSearch.search(ProductCatalog, sProductText)[0]);
+    return Boolean(findExactCatalogProduct(sProductText) || ProductSearch.search(ProductCatalog, sProductText)[0]);
+  }
+
+  function findExactCatalogProduct(sProductText) {
+    var sProductKey = normalizeKey(sProductText);
+
+    return ProductCatalog.find(function (oProduct) {
+      return normalizeKey(oProduct.key) === sProductKey || (oProduct.aliases || []).some(function (sAlias) {
+        return normalizeKey(sAlias) === sProductKey;
+      });
+    });
   }
 
   function parseAmount(sRawText) {

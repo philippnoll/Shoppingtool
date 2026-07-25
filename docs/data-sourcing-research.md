@@ -324,3 +324,42 @@ Messstand fuer den Aktionsprospekt `20.07.2026 - 25.07.2026`:
 - keine leeren Namen, ungueltigen Preise oder Mengen
 - keine exakten Duplikate
 - noch keine gesetzten `productKey`-Werte
+
+## Konservatives Produktmatching
+
+Stand: 2026-07-25
+
+`ProductMatcher` ist bewusst vom Lidl-PDF-Parser getrennt. Der PDF-Parser
+beschreibt nur, was raeumlich im Prospekt erkannt wurde. Der Matcher ordnet
+danach einen Handelsnamen einem Eintrag aus dem gemeinsamen
+`ProductCatalog.js` zu.
+
+Die erste Version verwendet kein Fuzzy Matching fuer Angebotsnamen. Sie
+arbeitet nachvollziehbar mit:
+
+- kanonischen Produktnamen als eigenstaendigen Begriffen
+- expliziten Angebotsaliasen wie `Romatomaten` oder `Markenbutter`
+- Ausschluessen fuer irrefuehrende Namen wie `Tomatenketchup`, `Buttermilch`
+  oder `Milchreis`
+- einem Match-Typ und einer Konfidenz pro sicherem Treffer
+- einem `ambiguous`-Ergebnis, sobald mehrere Produkte passen
+
+Der kleine Katalog bleibt die einzige Stammdatenquelle. UI5 laedt ihn als
+UI5-Modul, Node-Skripte laden dieselbe Datei ueber CommonJS.
+
+Auswertung des vorhandenen 200-Kandidaten-Prospekts:
+
+- 9 konservative Treffer
+- 5 durch explizite Regeln ausgeschlossene Namen
+- 186 nicht gematchte Namen
+- keine mehrdeutigen Treffer
+
+Zu den Treffern gehoeren Romatomaten, Vollkornbrot, Reis, Kaese, Butter, Milch
+und Aepfel. Die niedrige Trefferquote ist in dieser Stufe beabsichtigt: Der
+Produktkatalog enthaelt erst zehn generische Produkte, und ein falsches Angebot
+waere fuer die Optimierung schaedlicher als ein vorerst fehlendes Angebot.
+
+Der Matcher veraendert die rohen Kandidaten noch nicht. Als naechste Stufe muss
+ein Promotion-/Review-Schritt Match-Metadaten und Parser-Konfidenz getrennt
+speichern, nicht gematchte Namen berichten und nur gepruefte Angebote in das
+Optimizer-Format ueberfuehren.

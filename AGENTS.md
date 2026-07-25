@@ -95,6 +95,7 @@ Save final purchase list and prices
 - `scripts/extract-lidl-pdf-text.js`: extracts readable and positioned PDF text with `pdftotext`.
 - `scripts/lib/LidlPdfLayoutParser.js`: converts positioned PDF XHTML into JavaScript pages and text blocks.
 - `scripts/lib/LidlOfferCandidateParser.js`: turns positioned blocks into raw offer candidates.
+- `scripts/lib/ProductMatcher.js`: conservatively maps retailer names to shared catalog keys.
 - `scripts/parse-lidl-offers.js`: parses a complete positioned flyer into candidate JSON.
 - `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
@@ -118,8 +119,11 @@ The Lidl source investigation established:
 - `pdftotext -bbox-layout` provides words and coordinates that can be used to associate product names, quantities, prices, and conditions spatially.
 - `LidlOfferCandidateParser` now parses fixed packs, multipacks, variable-weight goods, regular prices, Lidl Plus prices, and PDF word breaks.
 - The full 20.07.2026-25.07.2026 flyer produced 200 candidates from 69 pages without empty names, invalid prices/quantities, or exact duplicates.
-- Every candidate still has `productKey: null` by design. The pipeline stops before optimizer-ready offers.
-- The next infrastructure step is a separate, conservative product matcher. It must not be folded into the Lidl PDF parser.
+- Every raw candidate still has `productKey: null` by design. The PDF pipeline stops before optimizer-ready offers.
+- A separate conservative `ProductMatcher` now uses catalog terms, explicit offer aliases, exclusions, match types, and confidence values.
+- The matcher deliberately avoids fuzzy matching for retailer offers. Ambiguous names remain unmatched.
+- Applied independently to the 200-candidate flyer, it produced 9 matches, 5 explicit exclusions, and 186 unmatched names.
+- The next infrastructure step is a promotion/review stage that applies the matcher without folding it into the Lidl PDF parser.
 
 ## Verified Commands
 
@@ -136,11 +140,11 @@ npm run build
 ## Next Useful Steps
 
 - Continue the Lidl infrastructure without detailed teaching questions:
-  - add matcher metadata to the shared product catalog without duplicating catalog data;
-  - map raw product names to `productKey` in a separate product-matching step;
-  - preserve match type/confidence and leave uncertain matches as `null`;
-  - explicitly test false positives such as `Tomatenketchup`, `Buttermilch`, and `Milchreis`;
-  - produce a review report before handing optimizer-ready offers to `ShoppingOptimizer`.
+  - apply `ProductMatcher` to candidate files in a separate promotion stage;
+  - preserve parser confidence and matcher type/confidence independently;
+  - leave uncertain matches as `null` and include them in a review report;
+  - filter invalid, expired, incomplete, and conditional Lidl Plus offers explicitly;
+  - hand only reviewed optimizer-ready offers to `ShoppingOptimizer`.
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
 - Treat `ROADMAP.md` as the authoritative ordered handoff for future work.

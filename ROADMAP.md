@@ -79,7 +79,8 @@ sparsam und nachvollziehbar abgerufen werden.
 
 - `ProductCatalog.js` enthaelt aktuell einen kleinen internen Produktkatalog.
 - Derselbe Katalog kann direkt als UI5-Modul und als Node/CommonJS-Modul geladen
-  werden. Es gibt dadurch nur eine Quelle fuer die Produktstammdaten.
+  werden. Es gibt dadurch nur eine Quelle fuer Produktstammdaten, Eingabealiasse
+  und konservative Angebots-Matchingregeln.
 - `ProductSearch.js` kapselt MiniSearch.
 - Prefix- und Fuzzy-Suche erkennen unter anderem Tippfehler.
 - `ProductRecognition.js` trennt Freitext, liest Menge und Einheit und erzeugt
@@ -209,15 +210,18 @@ Lidl-Prospekt
   -> offer.productKey = null
 ```
 
-Die naechste Aufgabe verbindet diese Seiten kontrolliert:
+Der ProductMatcher ist inzwischen als getrenntes Modul vorhanden:
 
 ```text
 offer.rawName
   -> ProductMatcher
   -> sicherer productKey oder null
-  -> nur gepruefte Angebote
-  -> ShoppingOptimizer
+  -> Match-Typ und Konfidenz
 ```
+
+Noch fehlt die kontrollierte Promotion in optimizerfaehige Angebote. Sie muss
+Parser- und Matcher-Konfidenz getrennt behalten, unklare Namen berichten und
+nur gepruefte Angebote an den `ShoppingOptimizer` weitergeben.
 
 ## Wichtige Datenvertraege
 
@@ -289,25 +293,23 @@ Ein Scraper-Kandidat darf dieses Format erst erreichen, wenn sein
 
 ### Phase 1: Produkt-Matcher Fuer Prospektnamen
 
-Status: als Naechstes umsetzen.
+Status: umgesetzt.
 
 Ziel: Handelsnamen wie `MEGGLE Feine Butter` oder `Romatomaten` einem
 internen Produkt zuordnen, ohne aehnlich klingende andere Produkte falsch
 zuzuordnen.
 
-Arbeitspakete:
+Umgesetzte Arbeitspakete:
 
-1. Erledigt: `ProductCatalog.js` stellt UI5 und Node/CommonJS dieselben
-   Stammdaten bereit, ohne eine zweite Katalogdatei zu pflegen.
-2. Den kleinen Katalog um Synonyme, Handelsbezeichnungen und bei Bedarf
-   Oberbegriffe erweitern.
-3. Einen separaten `ProductMatcher` bauen. Lidl-spezifisches PDF-Parsing und
-   allgemeines Produktmatching bleiben getrennte Module.
-4. Zu jedem Match mindestens `productKey`, Match-Art und Konfidenz
-   zurueckgeben.
-5. Einen konservativen Schwellwert verwenden. Unsichere Treffer bleiben
-   `productKey: null`.
-6. Positive und negative Tests schreiben.
+1. `ProductCatalog.js` stellt UI5 und Node/CommonJS dieselben Stammdaten bereit,
+   ohne eine zweite Katalogdatei zu pflegen.
+2. Der kleine Katalog enthaelt Eingabealiasse, explizite Angebotsaliasse und
+   Ausschlussbegriffe.
+3. `ProductMatcher` bleibt vom Lidl-spezifischen PDF-Parsing getrennt.
+4. Match-Ergebnisse enthalten `productKey`, Match-Art und Konfidenz.
+5. Es gibt absichtlich kein Fuzzy Matching fuer Angebotsnamen. Unsichere oder
+   mehrdeutige Treffer bleiben `productKey: null`.
+6. Positive, negative und mehrdeutige Faelle sind getestet.
 
 Mindestens zu testende positive Faelle:
 
@@ -333,7 +335,16 @@ Akzeptanzkriterien:
 - Kein Scraper-Code kennt UI5-Controls oder Controller.
 - Tests, Lint und Build sind gruen.
 
+Messstand des 200-Kandidaten-Prospekts:
+
+- 9 sichere Matches
+- 5 explizit ausgeschlossene Namen
+- 186 nicht gematchte Namen
+- keine mehrdeutigen Matches
+
 ### Phase 2: Kandidaten Zu Verwendbaren Lidl-Angeboten Promoten
+
+Status: als Naechstes umsetzen.
 
 Ziel: Aus einem Prospekt eine gepruefte Angebotsdatei erzeugen, die der
 Optimizer technisch verwenden kann.
@@ -544,15 +555,20 @@ Einkaufsliste, Angebote und Bons.
 Die naechste Harness sollte genau hier beginnen:
 
 1. `git status --short --branch` und die letzten Commits pruefen.
-2. `ProductCatalog.js`, `ProductSearch.js`, `ProductRecognition.js` und die
-   Lidl-Kandidatenfixtures lesen.
-3. Kleine Tests fuer die drei positiven und drei negativen Match-Beispiele
-   zuerst schreiben.
-4. Den separaten ProductMatcher implementieren.
-5. Einen vorhandenen Lidl-Kandidatenlauf damit auswerten und Matchquote,
-   Nicht-Treffer und auffaellige Fehl-Treffer berichten.
-6. `npm test`, `npm run lint` und `npm run build` ausfuehren.
-7. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
+2. `ProductMatcher.js`, `LidlOfferCandidateParser.js`,
+   `parse-lidl-offers.js`, `data/stores.json` und die zugehoerigen Tests lesen.
+3. Tests fuer eine getrennte Promotion-/Review-Stufe zuerst schreiben.
+4. ProductMatcher auf eine Kandidatendatei anwenden und Parser-Konfidenz sowie
+   Match-Typ/-Konfidenz getrennt behalten.
+5. Nicht gematchte, ausgeschlossene und ungueltige Kandidaten mit Gruenden in
+   einem Review-Report ausgeben.
+6. Store-Namen ergaenzen und nur sichere, gueltige Angebote in ein separates
+   optimizer-ready Format schreiben. Lidl-Plus-Preise nicht stillschweigend
+   als allgemein verfuegbar behandeln.
+7. Den vorhandenen Prospekt auswerten und mehrere Seiten stichprobenartig
+   pruefen.
+8. `npm test`, `npm run lint` und `npm run build` ausfuehren.
+9. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
    werden kann. Nicht selbst pushen.
 
 ## Wichtige Offene Entscheidungen
