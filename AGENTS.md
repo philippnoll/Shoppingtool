@@ -93,19 +93,21 @@ Save final purchase list and prices
 - `scripts/normalize-lidl-flyer.js`: converts raw Lidl flyer JSON into the stable intermediate flyer format.
 - `scripts/extract-lidl-pdf-text.js`: extracts readable and positioned PDF text with `pdftotext`.
 - `scripts/lib/LidlPdfLayoutParser.js`: converts positioned PDF XHTML into JavaScript pages and text blocks.
+- `scripts/lib/LidlOfferCandidateParser.js`: turns positioned blocks into raw offer candidates.
+- `scripts/parse-lidl-offers.js`: parses a complete positioned flyer into candidate JSON.
+- `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
 ## Current Scraper State
 
-Current local scraper commits:
+Current scraper milestone commits:
 
 ```text
+c098682 Parse Lidl offer candidates
 c7f81f9 Parse Lidl PDF text positions
 0c7d8b7 Add Lidl PDF text extraction
 f92ab35 Add first Lidl flyer normalizer
 b590bae Add Lidl offer discovery spike
 ```
-
-At this milestone the repository was `ahead 3`. The user handles pushing.
 
 The Lidl source investigation established:
 
@@ -113,7 +115,10 @@ The Lidl source investigation established:
 - Structured JSON products are mostly non-food/online products and are not enough for grocery offers.
 - The PDF has an embedded text layer, so Lidl does not currently require OCR.
 - `pdftotext -bbox-layout` provides words and coordinates that can be used to associate product names, quantities, prices, and conditions spatially.
-- The pipeline still stops before finished optimizer-ready offer objects. The next infrastructure step is a tested Lidl offer-block heuristic over positioned text.
+- `LidlOfferCandidateParser` now parses fixed packs, multipacks, variable-weight goods, regular prices, Lidl Plus prices, and PDF word breaks.
+- The full 20.07.2026-25.07.2026 flyer produced 200 candidates from 69 pages without empty names, invalid prices/quantities, or exact duplicates.
+- Every candidate still has `productKey: null` by design. The pipeline stops before optimizer-ready offers.
+- The next infrastructure step is a separate, conservative product matcher. It must not be folded into the Lidl PDF parser.
 
 ## Verified Commands
 
@@ -130,10 +135,11 @@ npm run build
 ## Next Useful Steps
 
 - Continue the Lidl infrastructure without detailed teaching questions:
-  - parse positioned PDF blocks into raw Lidl offer candidates;
-  - retain regular price, Lidl Plus price, quantity, unit, source page, and validity;
-  - map raw product names to `productKey` only in a separate product-matching step;
-  - test the result against several real food pages, not only Romatomaten;
-  - hand optimizer-ready offers to `ShoppingOptimizer` only after the fields are reliable.
+  - share one product catalog between UI5 and Node without duplicating catalog data;
+  - map raw product names to `productKey` in a separate product-matching step;
+  - preserve match type/confidence and leave uncertain matches as `null`;
+  - explicitly test false positives such as `Tomatenketchup`, `Buttermilch`, and `Milchreis`;
+  - produce a review report before handing optimizer-ready offers to `ShoppingOptimizer`.
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
+- Treat `ROADMAP.md` as the authoritative ordered handoff for future work.

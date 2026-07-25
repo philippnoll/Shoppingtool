@@ -1,6 +1,14 @@
 # Shoppingtool
 
-OpenUI5 Freestyle MVP for a shopping list with mock product recognition.
+Private OpenUI5 shopping-list and grocery optimization project.
+
+The current app combines a practical checklist, fuzzy product recognition and
+an initial store/split optimizer. A Lidl flyer pipeline already extracts raw
+offer candidates from positioned PDF text. Product matching, production-ready
+offer data and persistence are the next milestones.
+
+The full project status, decisions and ordered implementation plan live in
+[ROADMAP.md](ROADMAP.md).
 
 ## Run Locally
 
@@ -33,16 +41,21 @@ npx ui5 serve --port 8080
 
 - OpenUI5 Freestyle app with standard SAPUI5 theming.
 - Local `JSONModel`, no persistence.
-- Free-text shopping input.
-- Mock product recognition, including `buttermann -> Butter`.
-- Editable product candidates with name, quantity and unit.
-- Confirm and delete actions.
+- Free-text shopping input with quantities and fuzzy product recognition.
+- Editable checklist items with purchased state.
+- Single-store and split-shopping optimization with mock offers.
+- Configurable extra-store penalty, currently 7 EUR.
+- Lidl flyer discovery, normalization, PDF extraction and raw offer parsing.
 
-## Next Architecture Direction
+## Documentation
 
-- Keep the UI5 frontend standard and Fiori-oriented.
-- Move recognition from mock rules toward explainable fuzzy matching.
-- Add a CAP backend later, backed by PostgreSQL.
-- Persist scraper results in the database.
-- Store offer and price history so price trends can be analyzed over time.
-- Target deployment on a private NAS after the MVP is stable.
+- [Project status and roadmap](ROADMAP.md)
+- [Data sourcing and Lidl research](docs/data-sourcing-research.md)
+- [UI5 learning notes](docs/ui5-basics.md)
+
+## Next Milestone
+
+Build a separate, conservative product matcher that maps retailer names such
+as `Romatomaten` or `MEGGLE Feine Butter` to internal product keys. Ambiguous
+names must remain unmatched. Only matched, validated and current offers may be
+passed to the optimizer.
