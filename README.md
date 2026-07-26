@@ -3,10 +3,10 @@
 Private OpenUI5 shopping-list and grocery optimization project.
 
 The current app combines a practical checklist, fuzzy product recognition and
-an initial store/split optimizer. A Lidl flyer pipeline already extracts raw
-offer candidates from positioned PDF text. A conservative product matcher can
-map safe retailer names to the shared catalog. Production-ready offer data and
-persistence are the next milestones.
+an initial store/split optimizer. The Lidl flyer pipeline extracts raw offer
+candidates from positioned PDF text, matches conservative product names and
+promotes only valid, unconditional offers into an optimizer-ready format.
+Automated end-to-end retrieval and persistence are the next milestones.
 
 The full project status, decisions and ordered implementation plan live in
 [ROADMAP.md](ROADMAP.md).
@@ -47,6 +47,8 @@ npx ui5 serve --port 8080
 - Single-store and split-shopping optimization with mock offers.
 - Configurable extra-store penalty, currently 7 EUR.
 - Lidl flyer discovery, normalization, PDF extraction and raw offer parsing.
+- Separate promotion/review stage with validity, confidence and Lidl Plus
+  checks.
 
 ## Documentation
 
@@ -56,7 +58,6 @@ npx ui5 serve --port 8080
 
 ## Next Milestone
 
-Apply the product matcher in a separate promotion stage. It should generate a
-review report, reject incomplete or expired candidates, handle conditional
-Lidl Plus prices explicitly and emit optimizer-ready data only for safe
-matches.
+Make the Lidl pipeline repeatable with one end-to-end command for discovery,
+download, PDF extraction, parsing and promotion. Preserve raw sources, use
+respectful timeout/retry behavior and emit a clear quality report.

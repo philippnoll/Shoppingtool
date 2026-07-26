@@ -11,6 +11,7 @@
     "extract:lidl-pdf": "node scripts/extract-lidl-pdf-text.js",
     "normalize:lidl": "node scripts/normalize-lidl-flyer.js",
     "parse:lidl-offers": "node scripts/parse-lidl-offers.js",
+    "promote:lidl-offers": "node scripts/promote-lidl-offers.js",
     "lint": "eslint webapp test scripts",
     "test": "node --test test/*.test.js"
   },

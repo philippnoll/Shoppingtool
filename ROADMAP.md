@@ -1,6 +1,6 @@
 # Shoppingtool: Projektstand Und Roadmap
 
-Stand: 2026-07-25
+Stand: 2026-07-26
 
 Dieses Dokument ist die zentrale Uebergabe fuer Menschen und Coding Agents. Es
 beschreibt, welches Produkt gebaut wird, was bereits funktioniert, welche
@@ -151,7 +151,9 @@ Implementierte Stufen:
 3. `extract-lidl-pdf-text.js` erzeugt Layout-Text und Positions-XHTML.
 4. `LidlPdfLayoutParser.js` uebersetzt XHTML in einfache JavaScript-Objekte.
 5. `LidlOfferCandidateParser.js` erzeugt rohe Angebotskandidaten.
-6. `parse-lidl-offers.js` verarbeitet einen kompletten Prospekt.
+6. `LidlOfferPromoter.js` prueft, matcht und promotet nur sichere Kandidaten.
+7. `parse-lidl-offers.js` verarbeitet einen kompletten Prospekt und schreibt
+   Kandidaten-, Review- und optimizerfaehige Dateien.
 
 Der Kandidatenparser unterstuetzt derzeit:
 
@@ -191,7 +193,22 @@ Cantaloupemelone und Rinder-Rumpsteak.
 
 ## Aktuelle Datenkette
 
-Heute existieren zwei noch getrennte Seiten:
+Die Lidl-Seite reicht jetzt bis zu einem kontrollierten, optimizerfaehigen
+Angebotsformat:
+
+```text
+Lidl-Prospekt
+  -> LidlOfferCandidateParser
+  -> rohe Kandidaten mit parser.confidence
+  -> ProductMatcher
+  -> Match-Typ und match.confidence
+  -> LidlOfferPromoter
+       -> Review-Report mit Gruenden
+       -> nur sichere, gueltige und unbedingte Angebote
+  -> optimizer-ready JSON
+```
+
+Die UI5-App verwendet weiterhin `MockOffers.js`:
 
 ```text
 Einkaufsliste
@@ -201,27 +218,9 @@ Einkaufsliste
   -> MockOffers
 ```
 
-und:
-
-```text
-Lidl-Prospekt
-  -> LidlOfferCandidateParser
-  -> offer.rawName
-  -> offer.productKey = null
-```
-
-Der ProductMatcher ist inzwischen als getrenntes Modul vorhanden:
-
-```text
-offer.rawName
-  -> ProductMatcher
-  -> sicherer productKey oder null
-  -> Match-Typ und Konfidenz
-```
-
-Noch fehlt die kontrollierte Promotion in optimizerfaehige Angebote. Sie muss
-Parser- und Matcher-Konfidenz getrennt behalten, unklare Namen berichten und
-nur gepruefte Angebote an den `ShoppingOptimizer` weitergeben.
+Das optimizer-ready JSON wird erst in Phase 4 kleinschrittig in das UI5-Model
+eingebunden. Lidl-Plus-Preise werden bis zu einer expliziten Nutzeroption nicht
+an den Optimizer weitergegeben.
 
 ## Wichtige Datenvertraege
 
@@ -344,31 +343,53 @@ Messstand des 200-Kandidaten-Prospekts:
 
 ### Phase 2: Kandidaten Zu Verwendbaren Lidl-Angeboten Promoten
 
-Status: als Naechstes umsetzen.
+Status: umgesetzt.
 
 Ziel: Aus einem Prospekt eine gepruefte Angebotsdatei erzeugen, die der
 Optimizer technisch verwenden kann.
 
-Arbeitspakete:
+Umgesetzte Arbeitspakete:
 
-1. ProductMatcher auf alle Lidl-Kandidaten anwenden.
-2. Match-Ergebnis und Parser-Konfidenz getrennt speichern.
-3. Nicht gematchte Kandidaten in einem Review-Report ausgeben.
-4. Ungueltige, abgelaufene und unvollstaendige Angebote herausfiltern.
-5. Lidl-Plus-Preise als bedingte Preise kennzeichnen. Nicht stillschweigend
-   so tun, als seien sie fuer jeden Einkauf verfuegbar.
-6. Duplikate ueber stabile Quellfelder deduplizieren.
-7. Store-Namen aus `data/stores.json` ergaenzen.
-8. Eine klare optimizer-ready Ausgabedatei erzeugen.
+1. `LidlOfferPromoter` wendet den `ProductMatcher` auf alle Kandidaten an.
+2. Der Review-Eintrag behaelt den vollstaendigen Kandidaten sowie getrennte
+   `parser.confidence`- und `match.confidence`-Werte.
+3. Ungematchte, ausgeschlossene, mehrdeutige, unvollstaendige, unbekannte,
+   zu unsichere und zeitlich ungueltige Kandidaten erhalten maschinenlesbare
+   Gruende.
+4. Parser-Konfidenzen unter `0.9` werden nicht automatisch promotet.
+5. Lidl-Plus-Preise erhalten eine explizite Kundenprogramm-Bedingung und
+   werden nicht in die allgemein verwendbare Optimizer-Datei uebernommen.
+6. Exakte Kandidatenduplikate werden ueber stabile Quellfelder erkannt.
+7. Store-Namen kommen aus `data/stores.json`.
+8. `parse:lidl-offers` schreibt in einem Lauf `.candidates.json`,
+   `.review.json` und `.optimizer-ready.json`.
+9. `promote:lidl-offers` kann bereits vorhandene Kandidatendateien separat
+   erneut pruefen. Standardmaessig gilt das heutige UTC-Datum; `--as-of` ist
+   nur fuer reproduzierbare historische Auswertungen gedacht.
 
-Akzeptanzkriterien:
+Auswertung des 200-Kandidaten-Prospekts fuer den gueltigen Stichtag 23.07.2026:
 
-- Ein Kommando erzeugt Kandidaten, Match-Report und verwendbare Angebote.
-- Jede verworfene Zeile hat einen nachvollziehbaren Grund.
-- Ein Stichprobentest vergleicht mehrere PDF-Seiten visuell mit der Ausgabe.
-- Der Optimizer erhaelt keine Angebote mit `productKey: null`.
+- 8 optimizerfaehige, unbedingte Angebote
+- 192 Kandidaten im Review
+- 186 nicht gematchte Namen
+- 5 explizite Ausschluesse
+- 17 Lidl-Plus-Preise
+- 6 Kandidaten mit zu niedriger Parser-Konfidenz
+- kein optimizerfaehiges Angebot mit `productKey: null`
+
+Die Grundzahlen koennen sich ueberschneiden, weil ein Kandidat beispielsweise
+zugleich ungematcht und Lidl-Plus-bedingt sein kann. Am 26.07.2026 liefert der
+Standardlauf erwartungsgemaess null verwendbare Angebote und markiert alle 200
+Kandidaten als abgelaufen.
+
+Visuell geprueft wurden unter anderem die PDF-Seiten mit Aepfeln,
+Romatomaten/Vollkornbrot, Express-Reis, GAZI Kaese, Spitzenreis, Butter und
+haltbarer Milch. Namen, Packungsmengen, Preise und die Lidl-Plus-Behandlung
+stimmen dort mit der Ausgabe ueberein.
 
 ### Phase 3: Lidl-Pipeline Robust Und Wiederholbar Machen
+
+Status: als Naechstes umsetzen.
 
 Ziel: Ein neuer Lidl-Prospekt kann ohne manuelle Dateisuche verarbeitet
 werden.
@@ -555,26 +576,29 @@ Einkaufsliste, Angebote und Bons.
 Die naechste Harness sollte genau hier beginnen:
 
 1. `git status --short --branch` und die letzten Commits pruefen.
-2. `ProductMatcher.js`, `LidlOfferCandidateParser.js`,
-   `parse-lidl-offers.js`, `data/stores.json` und die zugehoerigen Tests lesen.
-3. Tests fuer eine getrennte Promotion-/Review-Stufe zuerst schreiben.
-4. ProductMatcher auf eine Kandidatendatei anwenden und Parser-Konfidenz sowie
-   Match-Typ/-Konfidenz getrennt behalten.
-5. Nicht gematchte, ausgeschlossene und ungueltige Kandidaten mit Gruenden in
-   einem Review-Report ausgeben.
-6. Store-Namen ergaenzen und nur sichere, gueltige Angebote in ein separates
-   optimizer-ready Format schreiben. Lidl-Plus-Preise nicht stillschweigend
-   als allgemein verfuegbar behandeln.
-7. Den vorhandenen Prospekt auswerten und mehrere Seiten stichprobenartig
-   pruefen.
-8. `npm test`, `npm run lint` und `npm run build` ausfuehren.
-9. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
-   werden kann. Nicht selbst pushen.
+2. Discovery-, Download-, Extraktions-, Parser- und Promotion-Skripte samt
+   Tests lesen.
+3. Tests fuer eine gemeinsame Lidl-Orchestrierung zuerst schreiben.
+4. Discovery, PDF-Download, Extraktion, Parsing und Promotion in einem
+   End-to-End-Kommando verbinden.
+5. Schonende Timeouts, begrenzte Retries und die Wiederverwendung vorhandener
+   Rohdaten definieren.
+6. Prospekt-ID, Abrufzeit und Quelldateien fuer reproduzierbare Laeufe
+   beibehalten.
+7. Einen Qualitaetsbericht mit Seitenzahl, Kandidatenzahl, Match-Arten,
+   Review-Gruenden und Warnungen erzeugen.
+8. Verhalten bei fehlendem oder veraendertem PDF testen.
+9. `npm test`, `npm run lint` und `npm run build` ausfuehren.
+10. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
+    werden kann. Nicht selbst pushen.
 
 ## Wichtige Offene Entscheidungen
 
 - Wie detailliert wird der interne Produktkatalog: generische Produkte,
   konkrete Varianten oder beides mit Hierarchie?
+- Wie werden Katalogprodukte mit Standardmenge `Stk` behandelt, wenn reale
+  Angebote in `g` vorliegen, zum Beispiel Butter, Brot und Kaese? Der aktuelle
+  Optimizer betrachtet diese Einheiten noch als inkompatibel.
 - Soll `Romatomaten` direkt `tomaten` sein oder spaeter eine Unterart mit
   Elternprodukt?
 - Welche Preise gelten ohne Kundenkarte und welche nur mit Lidl Plus?
@@ -609,6 +633,13 @@ npm run extract:lidl-pdf -- /pfad/zum/prospekt.pdf
 npm run parse:lidl-offers -- \
   data/raw/offers/lidl/pdf-text/<prospekt>.bbox.html \
   data/normalized/flyers/lidl/<prospekt>.normalized.json
+
+npm run promote:lidl-offers -- \
+  data/normalized/offers/lidl/<prospekt>.candidates.json
 ```
+
+Beide Befehle akzeptieren optional `--as-of YYYY-MM-DD` fuer reproduzierbare
+historische Pruefungen. Ohne diese Option werden abgelaufene Angebote anhand
+des heutigen UTC-Datums verworfen.
 
 `pdftotext` aus `poppler-utils` ist fuer die PDF-Schritte erforderlich.

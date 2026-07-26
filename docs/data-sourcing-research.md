@@ -305,7 +305,7 @@ Getestet sind unter anderem zwei echte, unterschiedlich aufgebaute Seiten:
 - Seite 3 mit Romatomaten, Multipack, Brot und Wassermelone
 - Seite 53 mit mehreren nebeneinanderliegenden Kilopreisen, Lidl Plus und Rumpsteak-Beispielgewicht
 
-Die komplette Kandidatendatei wird so erzeugt:
+Die komplette Pipeline ab positioniertem PDF-Text wird so ausgefuehrt:
 
 ```bash
 npm run parse:lidl-offers -- \
@@ -313,7 +313,17 @@ npm run parse:lidl-offers -- \
   data/normalized/flyers/lidl/<prospekt>.normalized.json
 ```
 
-Die Ausgabe unter `data/normalized/offers/lidl/` bleibt von Git ausgeschlossen. In dieser Stufe ist `productKey` absichtlich `null`. Erst ein separater ProductMatcher darf den Lidl-Namen einem internen Produkt zuordnen. Kandidaten ohne verlaessliches Produktmatching duerfen nicht an den `ShoppingOptimizer` weitergereicht werden.
+Sie erzeugt unter `data/normalized/offers/lidl/` drei von Git ausgeschlossene
+Dateien:
+
+- `<prospekt>.candidates.json` mit unveraenderten Rohkandidaten und
+  `productKey: null`
+- `<prospekt>.review.json` mit Match-Ergebnissen und Review-Gruenden
+- `<prospekt>.optimizer-ready.json` nur mit automatisch freigegebenen
+  Angeboten
+
+Kandidaten ohne verlaessliches Produktmatching duerfen nicht an den
+`ShoppingOptimizer` weitergereicht werden.
 
 Messstand fuer den Aktionsprospekt `20.07.2026 - 25.07.2026`:
 
@@ -359,7 +369,95 @@ und Aepfel. Die niedrige Trefferquote ist in dieser Stufe beabsichtigt: Der
 Produktkatalog enthaelt erst zehn generische Produkte, und ein falsches Angebot
 waere fuer die Optimierung schaedlicher als ein vorerst fehlendes Angebot.
 
-Der Matcher veraendert die rohen Kandidaten noch nicht. Als naechste Stufe muss
-ein Promotion-/Review-Schritt Match-Metadaten und Parser-Konfidenz getrennt
-speichern, nicht gematchte Namen berichten und nur gepruefte Angebote in das
-Optimizer-Format ueberfuehren.
+Der Matcher veraendert die rohen Kandidaten nicht. Diese Trennung bleibt auch
+nach Einfuehrung der folgenden Promotion-Stufe bestehen.
+
+## Promotion Und Review
+
+Stand: 2026-07-26
+
+`LidlOfferPromoter` ist die fachliche Schranke zwischen PDF-Kandidaten und dem
+`ShoppingOptimizer`. Fuer jeden Kandidaten entsteht ein Review-Eintrag mit:
+
+- dem unveraenderten Rohkandidaten
+- `parser.confidence` aus dem PDF-Parser
+- dem vollstaendigen Match-Ergebnis inklusive `match.confidence`
+- einem Status `optimizer-ready` oder `review`
+- maschinenlesbaren Gruenden fuer jede nicht automatische Promotion
+
+Aktuelle Review-Gruende sind unter anderem:
+
+```text
+unmatched-product
+excluded-product
+ambiguous-product
+low-parser-confidence
+invalid-price
+unknown-store
+expired
+not-yet-valid
+lidl-plus-required
+duplicate-candidate
+```
+
+Ein Kandidat wird nur promotet, wenn Quelle, Markt, Zeitraum, Seite, Menge,
+Einheit, Preis, Position und Parser-Konfidenz valide sind. Die derzeitige
+Mindestkonfidenz des Parsers ist `0.9`. Produktmatches muessen mindestens
+`0.9` erreichen. Der Marktname wird ueber die `storeId` aus
+`data/stores.json` ergaenzt.
+
+Lidl-Plus-Preise erhalten im Review explizit diese Bedingung:
+
+```js
+{
+  type: "loyalty-program",
+  program: "Lidl Plus",
+  required: true
+}
+```
+
+Sie werden noch nicht in die optimizer-ready Datei uebernommen, weil der
+bestehende Optimizer Preisbedingungen nicht auswertet. Damit kann ein
+Kundenkartenpreis nicht versehentlich als allgemein verfuegbar erscheinen.
+
+Bereits vorhandene Kandidatendateien lassen sich separat erneut pruefen:
+
+```bash
+npm run promote:lidl-offers -- \
+  data/normalized/offers/lidl/<prospekt>.candidates.json
+```
+
+Standardmaessig wird das heutige UTC-Datum verwendet. Fuer reproduzierbare
+historische Auswertungen akzeptieren sowohl `parse:lidl-offers` als auch
+`promote:lidl-offers` optional:
+
+```bash
+--as-of YYYY-MM-DD
+```
+
+Der 200-Kandidaten-Prospekt ergab fuer den historischen Stichtag 23.07.2026:
+
+- 8 optimizerfaehige Angebote
+- 192 Review-Eintraege
+- 186 ungematchte Namen
+- 5 explizite Ausschluesse
+- 17 Lidl-Plus-Bedingungen
+- 6 zu niedrige Parser-Konfidenzen
+
+Die Gruende koennen sich pro Kandidat ueberschneiden. Mit dem aktuellen Datum
+26.07.2026 werden korrekt alle 200 Kandidaten als abgelaufen und kein Angebot
+als optimizerfaehig bewertet.
+
+Visuell mit den Prospektbildern geprueft wurden Aepfel auf PDF-Seite 2,
+Romatomaten und Vollkornbrot auf Seite 3, Express-Reis auf Seite 15, GAZI Kaese
+auf Seite 16, Spitzenreis auf Seite 23, Butter auf Seite 65 und haltbare Milch
+auf Seite 68. Produktname, Packungsmenge, Preis und Bedingung stimmen in diesen
+Stichproben mit der Ausgabe ueberein.
+
+Bekannte Grenze: Das Format ist technisch fuer den `ShoppingOptimizer`
+verwendbar, aber einige Katalogprodukte haben noch die Standardmenge `Stk`,
+waehrend reale Angebote in `g` vorliegen. Das betrifft derzeit beispielsweise
+Butter, Brot und Kaese. Die Promotion darf die echte Angebotsmenge nicht in
+`Stk` umdeuten. Vor der UI-Anbindung muss deshalb entschieden werden, wie
+stueckbasierte Listeneingaben mit gewichtsbezogenen Packungen kompatibel
+gemacht werden.

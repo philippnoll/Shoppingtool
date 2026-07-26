@@ -96,14 +96,18 @@ Save final purchase list and prices
 - `scripts/lib/LidlPdfLayoutParser.js`: converts positioned PDF XHTML into JavaScript pages and text blocks.
 - `scripts/lib/LidlOfferCandidateParser.js`: turns positioned blocks into raw offer candidates.
 - `scripts/lib/ProductMatcher.js`: conservatively maps retailer names to shared catalog keys.
-- `scripts/parse-lidl-offers.js`: parses a complete positioned flyer into candidate JSON.
+- `scripts/lib/LidlOfferPromoter.js`: validates, matches, reviews, and promotes safe candidates.
+- `scripts/parse-lidl-offers.js`: produces candidate, review, and optimizer-ready JSON in one run.
+- `scripts/promote-lidl-offers.js`: re-runs promotion for an existing candidate file.
 - `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
 ## Current Scraper State
 
-Current scraper milestone commits:
+Current scraper milestone commits before the promotion stage:
 
 ```text
+ace0772 Add conservative product matcher
+29aeb44 Share product catalog with Node
 c098682 Parse Lidl offer candidates
 c7f81f9 Parse Lidl PDF text positions
 0c7d8b7 Add Lidl PDF text extraction
@@ -119,11 +123,15 @@ The Lidl source investigation established:
 - `pdftotext -bbox-layout` provides words and coordinates that can be used to associate product names, quantities, prices, and conditions spatially.
 - `LidlOfferCandidateParser` now parses fixed packs, multipacks, variable-weight goods, regular prices, Lidl Plus prices, and PDF word breaks.
 - The full 20.07.2026-25.07.2026 flyer produced 200 candidates from 69 pages without empty names, invalid prices/quantities, or exact duplicates.
-- Every raw candidate still has `productKey: null` by design. The PDF pipeline stops before optimizer-ready offers.
-- A separate conservative `ProductMatcher` now uses catalog terms, explicit offer aliases, exclusions, match types, and confidence values.
+- Every raw candidate still has `productKey: null` by design. Matching remains separate from PDF parsing.
+- A separate conservative `ProductMatcher` uses catalog terms, explicit offer aliases, exclusions, match types, and confidence values.
 - The matcher deliberately avoids fuzzy matching for retailer offers. Ambiguous names remain unmatched.
-- Applied independently to the 200-candidate flyer, it produced 9 matches, 5 explicit exclusions, and 186 unmatched names.
-- The next infrastructure step is a promotion/review stage that applies the matcher without folding it into the Lidl PDF parser.
+- `LidlOfferPromoter` keeps parser and matcher confidence separate, validates source fields and validity, deduplicates stable source rows, resolves store names, and reports every rejected candidate with reasons.
+- Parser confidence below 0.9 is reviewed instead of promoted.
+- Lidl Plus prices are marked as loyalty-program conditions and excluded from generally available optimizer-ready data.
+- For the valid historical date 2026-07-23, the 200-candidate flyer produces 8 optimizer-ready offers and 192 review entries. With the current date 2026-07-26, all 200 are correctly rejected as expired.
+- `parse:lidl-offers` now creates candidate, review, and optimizer-ready files in one run; `promote:lidl-offers` can reprocess an existing candidate file.
+- The next infrastructure step is Phase 3: orchestrate discovery, download, extraction, parsing, promotion, and quality reporting.
 
 ## Verified Commands
 
@@ -140,11 +148,11 @@ npm run build
 ## Next Useful Steps
 
 - Continue the Lidl infrastructure without detailed teaching questions:
-  - apply `ProductMatcher` to candidate files in a separate promotion stage;
-  - preserve parser confidence and matcher type/confidence independently;
-  - leave uncertain matches as `null` and include them in a review report;
-  - filter invalid, expired, incomplete, and conditional Lidl Plus offers explicitly;
-  - hand only reviewed optimizer-ready offers to `ShoppingOptimizer`.
+  - orchestrate discovery, download, extraction, parsing, promotion, and quality reporting;
+  - preserve flyer IDs, fetch times, source files, and raw data for reproducibility;
+  - add respectful timeout/retry behavior and reuse already downloaded data;
+  - test missing or changed PDFs and make failures explicit;
+  - keep optimizer-ready output separate from review data.
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
 - Treat `ROADMAP.md` as the authoritative ordered handoff for future work.
