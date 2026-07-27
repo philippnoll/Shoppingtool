@@ -3,10 +3,10 @@
 Private OpenUI5 shopping-list and grocery optimization project.
 
 The current app combines a practical checklist, fuzzy product recognition and
-an initial store/split optimizer. The Lidl flyer pipeline extracts raw offer
-candidates from positioned PDF text, matches conservative product names and
-promotes only valid, unconditional offers into an optimizer-ready format.
-Automated end-to-end retrieval and persistence are the next milestones.
+an initial store/split optimizer. The repeatable Lidl flyer pipeline discovers
+the relevant action flyer, preserves its raw source and PDF, extracts positioned
+text, matches conservative product names and promotes only valid,
+unconditional offers into an optimizer-ready format.
 
 The full project status, decisions and ordered implementation plan live in
 [ROADMAP.md](ROADMAP.md).
@@ -49,6 +49,44 @@ npx ui5 serve --port 8080
 - Lidl flyer discovery, normalization, PDF extraction and raw offer parsing.
 - Separate promotion/review stage with validity, confidence and Lidl Plus
   checks.
+- One end-to-end Lidl command with bounded retries, safe artifact reuse,
+  provenance and a quality report.
+
+## Lidl Offer Pipeline
+
+`pdftotext` from `poppler-utils` must be installed. Then run:
+
+```bash
+npm run pipeline:lidl
+```
+
+The command discovers the active Lidl `Aktionsprospekt` (or the nearest
+upcoming one when there is no Sunday flyer), downloads its source JSON and PDF,
+extracts text, parses candidates, matches and promotes them, and writes a
+quality report. `--as-of YYYY-MM-DD` makes selection and validity checks
+reproducible; `--force` deliberately refreshes otherwise reusable artifacts:
+
+```bash
+npm run pipeline:lidl -- --as-of 2026-07-23
+npm run pipeline:lidl -- --force
+```
+
+Outputs stay outside Git:
+
+- `data/raw/offers/lidl/`: discovery response, flyer-specific source JSON,
+  metadata, PDF and extracted text;
+- `data/normalized/flyers/lidl/`: normalized flyer metadata;
+- `data/normalized/offers/lidl/`: separate `.candidates.json`, `.review.json`,
+  `.optimizer-ready.json` and `.quality-report.json` files.
+
+Business outputs are named by stable flyer identity, so repeated runs replace
+the same snapshot rather than append duplicate offers. Raw flyer sources, PDFs
+and extracted text also include content hashes, so a changed artifact does not
+overwrite the evidence behind an older run. Fresh discovery data and validated
+flyer/PDF/extraction artifacts are reused when safe. Network
+requests use finite timeouts and retries; source-shape, missing-PDF, invalid-PDF,
+extraction and promotion failures stop the command with an explicit step and
+cause. Raw files remain available for diagnosis.
 
 ## Documentation
 
@@ -58,6 +96,6 @@ npx ui5 serve --port 8080
 
 ## Next Milestone
 
-Make the Lidl pipeline repeatable with one end-to-end command for discovery,
-download, PDF extraction, parsing and promotion. Preserve raw sources, use
-respectful timeout/retry behavior and emit a clear quality report.
+Connect the optimizer-ready Lidl output to the UI5 model and view in small,
+explained learning steps, without treating flyer offers as complete shelf
+prices.
