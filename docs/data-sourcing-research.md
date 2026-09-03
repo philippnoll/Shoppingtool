@@ -533,6 +533,7 @@ Der Lauf stoppt mit benannter Pipeline-Stufe bei:
 
 - nicht mehr erkennbarem JSON-LD oder veraenderter Flyer-JSON-Struktur;
 - keinem aktiven oder kommenden Aktionsprospekt fuer das Referenzdatum;
+- vom ausgewaehlten JSON-LD-Ereignis abweichenden Flyer-Gueltigkeitsdaten;
 - fehlender `pdfUrl`;
 - einer Antwort ohne PDF-Signatur;
 - fehlendem `pdftotext`, leerer oder unlesbarer Extraktion;

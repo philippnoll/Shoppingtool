@@ -190,6 +190,41 @@ test("rejects expired flyer documents from every discovery path", async function
   }
 });
 
+test("rejects a flyer source whose dates differ from the selected event", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oMismatchedSource = createFlyerSource();
+  const aRequests = [];
+
+  oMismatchedSource.flyer.offerStartDate = "2026-07-27";
+  oMismatchedSource.flyer.offerEndDate = "2026-08-01";
+  oMismatchedSource.flyer.startDate = "2026-07-27";
+  oMismatchedSource.flyer.endDate = "2026-08-01";
+
+  await assert.rejects(function () {
+    return LidlOfferPipeline.run(createOptions(sRoot), {
+      now: fixedNow,
+      sleep: noSleep,
+      fetch: async function (sUrl) {
+        aRequests.push(sUrl);
+
+        if (sUrl === DISCOVERY_URL) {
+          return response(createDiscoveryHtml(), 200, "text/html");
+        }
+
+        return response(JSON.stringify(oMismatchedSource), 200, "application/json");
+      }
+    });
+  }, function (oError) {
+    assert.equal(oError.code, "selected-flyer-date-mismatch");
+    assert.match(oError.message, /selected active Aktionsprospekt/);
+    assert.match(oError.message, /valid from 2026-07-20 to 2026-07-25/);
+    assert.match(oError.message, /source flyer lidl-flyer-test-id is valid from 2026-07-27 to 2026-08-01/);
+    assert.match(oError.message, /inspect preserved source at/);
+    return true;
+  });
+  assert.equal(aRequests.length, 2);
+});
+
 test("bounds retries and reports the final network cause", async function (oTestContext) {
   const sRoot = await createTestRoot(oTestContext);
   let iAttempts = 0;

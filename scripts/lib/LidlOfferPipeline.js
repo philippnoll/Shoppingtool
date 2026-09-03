@@ -41,8 +41,9 @@ async function run(oOptions, oDependencies) {
   const oSource = await loadFlyerSource(oConfig, oFlyerPaths, oDiscovery, oSelection);
   const oFlyer = validateFlyerSource(oSource.document, oSource.sourceUrl);
 
-  validateFlyerForReferenceDate(
+  validateFlyerSelection(
     oFlyer,
+    oSelection,
     oConfig.referenceDate,
     relativePath(oConfig.rootDir, oSource.sourceFile)
   );
@@ -498,13 +499,24 @@ function changedSourceError(sMessage, sSourceUrl) {
   );
 }
 
-function validateFlyerForReferenceDate(oFlyer, sReferenceDate, sSourceFile) {
+function validateFlyerSelection(oFlyer, oSelection, sReferenceDate, sSourceFile) {
   if (oFlyer.validTo < sReferenceDate) {
     throw new LidlPipelineError(
       "source validation",
       "no-current-flyer",
       "flyer " + oFlyer.id + " expired on " + oFlyer.validTo + " before reference date " + sReferenceDate +
         "; inspect preserved source at " + sSourceFile
+    );
+  }
+
+  if (oSelection.kind === "discovered-event" &&
+      (oFlyer.validFrom !== oSelection.validFrom || oFlyer.validTo !== oSelection.validTo)) {
+    throw new LidlPipelineError(
+      "source validation",
+      "selected-flyer-date-mismatch",
+      "selected " + oSelection.selection + " Aktionsprospekt " + oSelection.flyerIdentifier + " is valid from " +
+        oSelection.validFrom + " to " + oSelection.validTo + ", but source flyer " + oFlyer.id + " is valid from " +
+        oFlyer.validFrom + " to " + oFlyer.validTo + "; inspect preserved source at " + sSourceFile
     );
   }
 }
