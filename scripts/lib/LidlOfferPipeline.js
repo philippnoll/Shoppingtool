@@ -40,6 +40,13 @@ async function run(oOptions, oDependencies) {
   const oFlyerPaths = createFlyerPaths(oPaths, sSafeIdentifier);
   const oSource = await loadFlyerSource(oConfig, oFlyerPaths, oDiscovery, oSelection);
   const oFlyer = validateFlyerSource(oSource.document, oSource.sourceUrl);
+
+  validateFlyerForReferenceDate(
+    oFlyer,
+    oConfig.referenceDate,
+    relativePath(oConfig.rootDir, oSource.sourceFile)
+  );
+
   const oPdf = await loadPdf(oConfig, oFlyerPaths, oFlyer, oSource);
   const oExtraction = await extractPdf(oConfig, oPaths, sSafeIdentifier, oPdf);
   const aPages = await parseLayout(oExtraction.bboxPath);
@@ -489,6 +496,17 @@ function changedSourceError(sMessage, sSourceUrl) {
     "changed-source-shape",
     sMessage + "; inspect the preserved source at " + sSourceUrl
   );
+}
+
+function validateFlyerForReferenceDate(oFlyer, sReferenceDate, sSourceFile) {
+  if (oFlyer.validTo < sReferenceDate) {
+    throw new LidlPipelineError(
+      "source validation",
+      "no-current-flyer",
+      "flyer " + oFlyer.id + " expired on " + oFlyer.validTo + " before reference date " + sReferenceDate +
+        "; inspect preserved source at " + sSourceFile
+    );
+  }
 }
 
 async function loadPdf(oConfig, oFlyerPaths, oFlyer, oSource) {

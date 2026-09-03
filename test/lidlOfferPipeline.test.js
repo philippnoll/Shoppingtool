@@ -151,6 +151,45 @@ test("rejects discovery pages that contain only expired flyers", function () {
   });
 });
 
+test("rejects expired flyer documents from every discovery path", async function (oTestContext) {
+  const aCases = ["direct JSON", "selected endpoint"];
+
+  for (const sCase of aCases) {
+    const sRoot = await createTestRoot(oTestContext);
+    const oExpiredSource = createFlyerSource();
+    const aRequests = [];
+
+    oExpiredSource.flyer.offerEndDate = "2026-07-22";
+    oExpiredSource.flyer.endDate = "2026-07-22";
+
+    await assert.rejects(function () {
+      return LidlOfferPipeline.run(createOptions(sRoot), {
+        now: fixedNow,
+        sleep: noSleep,
+        fetch: async function (sUrl) {
+          aRequests.push(sUrl);
+
+          if (sUrl === DISCOVERY_URL) {
+            return response(
+              sCase === "direct JSON" ? JSON.stringify(oExpiredSource) : createDiscoveryHtml(),
+              200,
+              sCase === "direct JSON" ? "application/json" : "text/html"
+            );
+          }
+
+          return response(JSON.stringify(oExpiredSource), 200, "application/json");
+        }
+      });
+    }, function (oError) {
+      assert.equal(oError.code, "no-current-flyer", sCase);
+      assert.match(oError.message, /expired on 2026-07-22 before reference date 2026-07-23/);
+      assert.match(oError.message, /inspect preserved source at/);
+      return true;
+    });
+    assert.equal(aRequests.length, sCase === "direct JSON" ? 1 : 2, sCase);
+  }
+});
+
 test("bounds retries and reports the final network cause", async function (oTestContext) {
   const sRoot = await createTestRoot(oTestContext);
   let iAttempts = 0;
