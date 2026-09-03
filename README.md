@@ -80,10 +80,10 @@ Outputs stay outside Git:
   `.optimizer-ready.json` and `.quality-report.json` files.
 
 Business outputs are named by stable flyer identity, so repeated runs replace
-the same snapshot rather than append duplicate offers. Raw flyer sources, PDFs
-and extracted text also include content hashes, so a changed artifact does not
-overwrite the evidence behind an older run. Fresh discovery data and validated
-flyer/PDF/extraction artifacts are reused when safe. Network
+the same snapshot rather than append duplicate offers. Discovery responses,
+raw flyer sources, PDFs and extracted text include content hashes, so a changed
+artifact does not overwrite the evidence behind an older run. Fresh discovery
+data and validated flyer/PDF/extraction artifacts are reused when safe. Network
 requests use finite timeouts and retries; source-shape, missing-PDF, invalid-PDF,
 extraction and promotion failures stop the command with an explicit step and
 cause. Raw files remain available for diagnosis.

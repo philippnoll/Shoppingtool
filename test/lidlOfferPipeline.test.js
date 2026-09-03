@@ -61,6 +61,8 @@ test("orchestrates discovery through promotion and quality reporting", async fun
   });
   assert.equal(oReport.source.flyerId, "lidl-flyer-test-id");
   assert.equal(oReport.source.flyerRetrievedAt, NOW.toISOString());
+  assert.match(oReport.source.discoverySourceFile, /discovery-[a-f0-9]{16}\.response\.html$/);
+  assert.match(oReport.source.discoverySha256, /^[a-f0-9]{64}$/);
   assert.match(oReport.source.flyerSourceFile, /source-[a-f0-9]{16}\.json$/);
   assert.match(oReport.source.pdfFile, /flyer-[a-f0-9]{16}\.pdf$/);
   assert.equal(oCandidates.candidates[0].productKey, null);
@@ -104,6 +106,49 @@ test("safely reuses source, PDF and extraction artifacts on a repeated run", asy
     extraction: true
   });
   assert.equal((await readJson(oSecondResult.paths.optimizer)).offerCount, 1);
+});
+
+test("preserves content-addressed discovery responses across refreshed runs", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oFirstResult = await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    sleep: noSleep,
+    fetch: createSuccessfulFetch([]),
+    extractPdf: copyExtractionFixture
+  });
+  const sFirstRelativePath = oFirstResult.qualityReport.source.discoverySourceFile;
+  const sFirstPath = path.join(sRoot, sFirstRelativePath);
+  const sFirstBody = await fs.readFile(sFirstPath, "utf8");
+  const sChangedDiscovery = createDiscoveryHtml().replace("</head>", " </head>");
+  const fnSuccessfulFetch = createSuccessfulFetch([]);
+  const oSecondResult = await LidlOfferPipeline.run(Object.assign(createOptions(sRoot), {
+    force: true
+  }), {
+    now: fixedNow,
+    sleep: noSleep,
+    fetch: async function (sUrl) {
+      return sUrl === DISCOVERY_URL
+        ? response(sChangedDiscovery, 200, "text/html")
+        : fnSuccessfulFetch(sUrl);
+    },
+    extractPdf: copyExtractionFixture
+  });
+  const sSecondRelativePath = oSecondResult.qualityReport.source.discoverySourceFile;
+
+  assert.notEqual(sSecondRelativePath, sFirstRelativePath);
+  assert.equal(await fs.readFile(sFirstPath, "utf8"), sFirstBody);
+  assert.equal(await fs.readFile(path.join(sRoot, sSecondRelativePath), "utf8"), sChangedDiscovery);
+});
+
+test("rejects discovery pages that contain only expired flyers", function () {
+  assert.throws(function () {
+    LidlOfferPipeline.selectFlyerSource(createDiscoveryHtml(), "text/html", "2026-07-26");
+  }, function (oError) {
+    assert.equal(oError.code, "no-current-flyer");
+    assert.match(oError.message, /no active or upcoming dated Aktionsprospekt/);
+    assert.match(oError.message, /2026-07-26/);
+    return true;
+  });
 });
 
 test("bounds retries and reports the final network cause", async function (oTestContext) {
@@ -255,6 +300,7 @@ test("aggregates quality warnings, match outcomes and review reasons", function 
     discovery: {
       retrievedAt: NOW.toISOString(),
       sourceFile: "/tmp/project/data/raw/discovery.html",
+      sha256: "def",
       reused: true
     },
     selection: {
@@ -318,6 +364,7 @@ test("aggregates quality warnings, match outcomes and review reasons", function 
     "unmatched-product": 1
   });
   assert.equal(oReport.matchedCount, 0);
+  assert.equal(oReport.source.discoverySha256, "def");
   assert.equal(oReport.warnings.length, 3);
   assert.match(oReport.warnings[1], /Source lists 2 pages/);
   assert.match(oReport.warnings[2], /No candidates were promoted/);

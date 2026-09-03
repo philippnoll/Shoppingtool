@@ -493,9 +493,11 @@ bewusst erneut untersucht werden soll.
 
 Die Pipeline verwendet einen stabilen Prospekt-Identifier fuer fachliche
 Ausgabedateien. Ein erneuter Lauf schreibt deshalb denselben Prospekt-Snapshot
-neu und haengt nicht dieselben Angebote als Duplikate an. Rohe Flyer-Quellen,
-PDFs und Extraktionen tragen zusaetzlich einen Inhalts-Hash; eine spaetere
-Quellenaenderung ueberschreibt dadurch nicht die Belege eines frueheren Laufs.
+neu und haengt nicht dieselben Angebote als Duplikate an. Discovery-Antworten,
+rohe Flyer-Quellen, PDFs und Extraktionen tragen zusaetzlich einen Inhalts-Hash;
+eine spaetere Quellenaenderung ueberschreibt dadurch nicht die Belege eines
+frueheren Laufs. Nur die Discovery-Metadatei zeigt jeweils auf den letzten
+Abruf.
 Lokal erhalten bleiben:
 
 - die Discovery-Antwort und ihre Abrufmetadaten;
@@ -513,10 +515,11 @@ versioniert werden nur kleine Fixtures.
 ### Schonende Wiederverwendung Und Netzwerkfehler
 
 Eine frische Discovery-Antwort wird fuer einen begrenzten Zeitraum
-wiederverwendet. Die prospektspezifische Quelle gilt bei derselben stabilen
-Identitaet als wiederverwendbar. Eine PDF wird nur zusammen mit passender URL
-und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
-PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
+wiederverwendet, wenn die gespeicherte Datei weiterhin ihren SHA-256-Hash hat.
+Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet als
+wiederverwendbar. Eine PDF wird nur zusammen mit passender URL und gespeichertem
+SHA-256-Hash verwendet; extrahierter Text nur, wenn sein PDF-Hash passt und das
+Positionsdokument weiterhin lesbar ist.
 
 Netzwerkabrufe haben einen Timeout, maximal drei Versuche und eine steigende
 kurze Wartezeit. Nur typische temporaere Statuscodes sowie Netzwerk- und
@@ -529,6 +532,7 @@ gemeldet. Es gibt keine unbegrenzten Retries.
 Der Lauf stoppt mit benannter Pipeline-Stufe bei:
 
 - nicht mehr erkennbarem JSON-LD oder veraenderter Flyer-JSON-Struktur;
+- keinem aktiven oder kommenden Aktionsprospekt fuer das Referenzdatum;
 - fehlender `pdfUrl`;
 - einer Antwort ohne PDF-Signatur;
 - fehlendem `pdftotext`, leerer oder unlesbarer Extraktion;

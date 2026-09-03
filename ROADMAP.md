@@ -403,9 +403,10 @@ Umgesetzte Arbeitspakete:
    `pdftotext`, Parsing, konservatives Matching, Promotion und Reporting.
 2. Netzwerkabrufe haben begrenzte Timeouts und maximal drei Versuche mit
    Wartezeit. Der letzte HTTP-, Timeout- oder Netzwerkgrund bleibt sichtbar.
-3. Die Discovery-Antwort wird kurzzeitig wiederverwendet. Flyer-Quelle, PDF
-   und Extraktion werden nur bei passender URL beziehungsweise passendem
-   PDF-Hash wiederverwendet; `--force` erzwingt bewusst einen Neuabruf.
+3. Die inhaltsadressierte Discovery-Antwort wird kurzzeitig wiederverwendet,
+   wenn ihr Hash weiterhin passt. Flyer-Quelle, PDF und Extraktion werden nur
+   bei passender URL beziehungsweise passendem PDF-Hash wiederverwendet;
+   `--force` erzwingt bewusst einen Neuabruf.
 4. Stabile Dateinamen pro Prospekt verhindern fachliche Duplikate bei
    Wiederholungen. Kandidaten, Review und optimizerfaehige Angebote bleiben
    getrennte Dateien.
@@ -417,7 +418,8 @@ Umgesetzte Arbeitspakete:
    Review-Gruende, Warnungen, Wiederverwendung und wichtige Quelldaten.
 7. Fehlende oder ungueltige PDFs, veraenderte Quellen, Extraktions- und
    Promotionfehler brechen mit benannter Stufe und Ursache ab. Rohdaten bleiben
-   zur Diagnose erhalten.
+   zur Diagnose erhalten. Gibt es weder einen aktiven noch einen kommenden
+   Aktionsprospekt, endet der Lauf statt einen abgelaufenen auszuwaehlen.
 8. Deterministische Tests decken Erfolg, Wiederverwendung, begrenzte Retries,
    Quellen-/PDF-Aenderungen, Extraktionsfehler und Berichtsaggregation ab, ohne
    Live-Lidl-Abhaengigkeit.

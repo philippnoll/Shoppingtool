@@ -169,13 +169,14 @@ async function loadDiscovery(oConfig, oPaths) {
     const sRawPath = path.resolve(oConfig.rootDir, oCachedMetadata.sourceFile);
     const sBody = await readTextIfPresent(sRawPath);
 
-    if (sBody !== null) {
+    if (sBody !== null && sha256(Buffer.from(sBody, "utf8")) === oCachedMetadata.sourceSha256) {
       return {
         body: sBody,
         contentType: oCachedMetadata.contentType,
         finalUrl: oCachedMetadata.finalUrl,
         retrievedAt: oCachedMetadata.retrievedAt,
         sourceFile: sRawPath,
+        sha256: oCachedMetadata.sourceSha256,
         reused: true
       };
     }
@@ -192,7 +193,8 @@ async function loadDiscovery(oConfig, oPaths) {
   const sBody = oResponse.body;
   const sContentType = oResponse.response.headers.get("content-type") || "";
   const sExtension = looksLikeJson(sBody, sContentType) ? ".json" : ".html";
-  const sRawPath = path.join(oPaths.rawRoot, "discovery.response" + sExtension);
+  const sSourceHash = sha256(Buffer.from(sBody, "utf8"));
+  const sRawPath = path.join(oPaths.rawRoot, "discovery-" + sSourceHash.slice(0, 16) + ".response" + sExtension);
   const sRetrievedAt = oConfig.now().toISOString();
   const oMetadata = {
     kind: "lidl-discovery-source",
@@ -201,7 +203,8 @@ async function loadDiscovery(oConfig, oPaths) {
     status: oResponse.response.status,
     contentType: sContentType,
     retrievedAt: sRetrievedAt,
-    sourceFile: relativePath(oConfig.rootDir, sRawPath)
+    sourceFile: relativePath(oConfig.rootDir, sRawPath),
+    sourceSha256: sSourceHash
   };
 
   await Promise.all([
@@ -215,6 +218,7 @@ async function loadDiscovery(oConfig, oPaths) {
     finalUrl: oMetadata.finalUrl,
     retrievedAt: sRetrievedAt,
     sourceFile: sRawPath,
+    sha256: sSourceHash,
     reused: false
   };
 }
@@ -260,8 +264,9 @@ function selectFlyerSource(sBody, sContentType, sReferenceDate) {
   if (!oSelected) {
     throw new LidlPipelineError(
       "discovery",
-      "changed-source-shape",
-      "no dated Aktionsprospekt was found in Lidl JSON-LD; the discovery page shape may have changed"
+      "no-current-flyer",
+      "no active or upcoming dated Aktionsprospekt was found in Lidl JSON-LD for " + sReferenceDate +
+        "; Lidl may not have published a current flyer or the discovery page shape may have changed"
     );
   }
 
@@ -313,19 +318,14 @@ function chooseEvent(aEvents, sReferenceDate) {
   }).sort(function (oLeft, oRight) {
     return datePart(oLeft.startDate).localeCompare(datePart(oRight.startDate));
   });
-  const aPrevious = aEvents.filter(function (oEvent) {
-    return datePart(oEvent.endDate) < sReferenceDate;
-  }).sort(function (oLeft, oRight) {
-    return datePart(oRight.endDate).localeCompare(datePart(oLeft.endDate));
-  });
-  const oSelected = aActive[0] || aUpcoming[0] || aPrevious[0];
+  const oSelected = aActive[0] || aUpcoming[0];
 
   if (!oSelected) {
     return null;
   }
 
   return Object.assign({}, oSelected, {
-    selection: aActive[0] === oSelected ? "active" : (aUpcoming[0] === oSelected ? "upcoming" : "previous")
+    selection: aActive[0] === oSelected ? "active" : "upcoming"
   });
 }
 
@@ -661,6 +661,7 @@ function createProvenance(oConfig, oDiscovery, oSelection, oSource, oPdf, oExtra
     discoveryUrl: oConfig.discoveryUrl,
     discoverySourceFile: relativePath(oConfig.rootDir, oDiscovery.sourceFile),
     discoveryRetrievedAt: oDiscovery.retrievedAt,
+    discoverySha256: oDiscovery.sha256,
     sourceUrl: oSource.sourceUrl,
     sourceFile: relativePath(oConfig.rootDir, oSource.sourceFile),
     sourceRetrievedAt: oSource.retrievedAt,
@@ -728,6 +729,7 @@ function createQualityReport(oInput) {
       discoveryUrl: oInput.flyer.provenance.discoveryUrl,
       discoverySourceFile: oInput.flyer.provenance.discoverySourceFile,
       discoveryRetrievedAt: oInput.discovery.retrievedAt,
+      discoverySha256: oInput.discovery.sha256 || null,
       flyerSourceUrl: oInput.source.sourceUrl,
       flyerSourceFile: relativePath(oInput.rootDir, oInput.source.sourceFile),
       flyerRetrievedAt: oInput.source.retrievedAt,
