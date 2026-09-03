@@ -401,8 +401,9 @@ Umgesetzte Arbeitspakete:
 
 1. `npm run pipeline:lidl` orchestriert Discovery, Flyer-JSON, PDF-Download,
    `pdftotext`, Parsing, konservatives Matching, Promotion und Reporting.
-2. Netzwerkabrufe haben begrenzte Timeouts und maximal drei Versuche mit
-   Wartezeit. Der letzte HTTP-, Timeout- oder Netzwerkgrund bleibt sichtbar.
+2. Netzwerkabrufe haben begrenzte Timeouts und standardmaessig maximal drei
+   Versuche mit Wartezeit. Der letzte HTTP-, Timeout- oder Netzwerkgrund bleibt
+   sichtbar.
 3. Die inhaltsadressierte Discovery-Antwort wird kurzzeitig wiederverwendet,
    wenn ihr Hash weiterhin passt. Flyer-Quelle, PDF und Extraktion werden nur
    bei passender URL beziehungsweise passendem PDF-Hash wiederverwendet;
@@ -411,9 +412,10 @@ Umgesetzte Arbeitspakete:
    Wiederholungen. Kandidaten, Review und optimizerfaehige Angebote bleiben
    getrennte Dateien.
 5. Provenienz behaelt Prospekt-Identifier und -ID, Quell-URLs und -dateien,
-   Abrufzeiten, Gueltigkeit, PDF-Hash und positionierte Textdatei. Rohe
-   Quellen, PDFs und Extraktionen sind inhaltsadressiert, damit ein geaenderter
-   Abruf fruehere Diagnosebelege nicht ueberschreibt.
+   Abrufzeiten, Gueltigkeit, PDF-Hash und positionierte Textdatei. Rohe Quellen
+   sind inhaltsadressiert; PDFs und Extraktionen sind ueber den PDF-Hash
+   abgelegt, damit ein geaenderter Abruf fruehere Diagnosebelege nicht
+   ueberschreibt.
 6. Der Qualitaetsbericht enthaelt Seiten, Kandidaten, Match-Arten, Promotions,
    Review-Gruende, Warnungen, Wiederverwendung und wichtige Quelldaten.
 7. Fehlende oder ungueltige PDFs, veraenderte Quellen, Extraktions- und

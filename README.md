@@ -61,10 +61,11 @@ npm run pipeline:lidl
 ```
 
 The command discovers the active Lidl `Aktionsprospekt` (or the nearest
-upcoming one when there is no Sunday flyer), downloads its source JSON and PDF,
-extracts text, parses candidates, matches and promotes them, and writes a
-quality report. `--as-of YYYY-MM-DD` makes selection and validity checks
-reproducible; `--force` deliberately refreshes otherwise reusable artifacts:
+upcoming one when none is active), retrieves or safely reuses its source JSON
+and PDF, extracts text, parses candidates, matches and promotes them, and
+writes a quality report. `--as-of YYYY-MM-DD` makes selection and validity
+checks reproducible; `--force` deliberately refreshes otherwise reusable
+artifacts:
 
 ```bash
 npm run pipeline:lidl -- --as-of 2026-07-23
@@ -80,13 +81,14 @@ Outputs stay outside Git:
   `.optimizer-ready.json` and `.quality-report.json` files.
 
 Business outputs are named by stable flyer identity, so repeated runs replace
-the same snapshot rather than append duplicate offers. Discovery responses,
-raw flyer sources, PDFs and extracted text include content hashes, so a changed
-artifact does not overwrite the evidence behind an older run. Fresh discovery
-data and validated flyer/PDF/extraction artifacts are reused when safe. Network
-requests use finite timeouts and retries; source-shape, missing-PDF, invalid-PDF,
-extraction and promotion failures stop the command with an explicit step and
-cause. Raw files remain available for diagnosis.
+the same snapshot rather than append duplicate offers. Discovery responses and
+raw flyer sources are content-addressed; PDFs and extracted text are keyed by
+the PDF content hash. A changed artifact therefore does not overwrite the
+evidence behind an older run. Fresh discovery data and validated
+flyer/PDF/extraction artifacts are reused when safe. Network requests use
+finite timeouts and retries; source-shape, missing-PDF, invalid-PDF, extraction
+and promotion failures stop the command with an explicit step and cause. Raw
+files remain available for diagnosis.
 
 ## Documentation
 

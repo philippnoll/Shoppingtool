@@ -494,10 +494,10 @@ bewusst erneut untersucht werden soll.
 Die Pipeline verwendet einen stabilen Prospekt-Identifier fuer fachliche
 Ausgabedateien. Ein erneuter Lauf schreibt deshalb denselben Prospekt-Snapshot
 neu und haengt nicht dieselben Angebote als Duplikate an. Discovery-Antworten,
-rohe Flyer-Quellen, PDFs und Extraktionen tragen zusaetzlich einen Inhalts-Hash;
-eine spaetere Quellenaenderung ueberschreibt dadurch nicht die Belege eines
-frueheren Laufs. Nur die Discovery-Metadatei zeigt jeweils auf den letzten
-Abruf.
+rohe Flyer-Quellen und PDFs werden mit ihrem Inhalts-Hash abgelegt;
+Extraktionen tragen den Hash des zugehoerigen PDFs. Eine spaetere
+Quellenaenderung ueberschreibt dadurch nicht die Belege eines frueheren Laufs.
+Nur die Discovery-Metadatei zeigt jeweils auf den letzten Abruf.
 Lokal erhalten bleiben:
 
 - die Discovery-Antwort und ihre Abrufmetadaten;
@@ -524,11 +524,11 @@ aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
 und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
 PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
 
-Netzwerkabrufe haben einen Timeout, maximal drei Versuche und eine steigende
-kurze Wartezeit. Nur typische temporaere Statuscodes sowie Netzwerk- und
-Timeoutfehler werden erneut versucht. Permanente HTTP-Fehler werden sofort,
-temporaere Fehler nach dem letzten Versuch mit ihrer eigentlichen Ursache
-gemeldet. Es gibt keine unbegrenzten Retries.
+Netzwerkabrufe haben einen Timeout, standardmaessig maximal drei Versuche und
+eine steigende kurze Wartezeit. Nur typische temporaere Statuscodes sowie
+Netzwerk- und Timeoutfehler werden erneut versucht. Permanente HTTP-Fehler
+werden sofort, temporaere Fehler nach dem letzten Versuch mit ihrer
+eigentlichen Ursache gemeldet. Es gibt keine unbegrenzten Retries.
 
 ### Explizite Fehler Und Qualitaetsbericht
 
