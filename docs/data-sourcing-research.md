@@ -517,9 +517,12 @@ versioniert werden nur kleine Fixtures.
 Eine frische Discovery-Antwort wird fuer einen begrenzten Zeitraum
 wiederverwendet, wenn die gespeicherte Datei weiterhin ihren SHA-256-Hash hat.
 Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet als
-wiederverwendbar. Eine PDF wird nur zusammen mit passender URL und gespeichertem
-SHA-256-Hash verwendet; extrahierter Text nur, wenn sein PDF-Hash passt und das
-Positionsdokument weiterhin lesbar ist.
+wiederverwendbar, wenn ihr gespeicherter Hash passt und Struktur sowie
+ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
+bleiben als inhaltsadressierte Rohdaten erhalten, werden aber nicht als
+aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
+und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
+PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
 
 Netzwerkabrufe haben einen Timeout, maximal drei Versuche und eine steigende
 kurze Wartezeit. Nur typische temporaere Statuscodes sowie Netzwerk- und

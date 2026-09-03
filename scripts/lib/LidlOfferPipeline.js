@@ -345,20 +345,38 @@ async function loadFlyerSource(oConfig, oFlyerPaths, oDiscovery, oSelection) {
 
   if (oCachedMetadata && oCachedMetadata.sourceUrl === sSourceUrl && oCachedMetadata.sourceFile) {
     const sCachedSourcePath = path.resolve(oConfig.rootDir, oCachedMetadata.sourceFile);
-    const oCachedDocument = await readJsonIfPresent(sCachedSourcePath);
+    const sCachedSource = await readTextIfPresent(sCachedSourcePath);
+    const bHashMatches = sCachedSource !== null && Boolean(oCachedMetadata.sourceSha256) &&
+      sha256(Buffer.from(sCachedSource, "utf8")) === oCachedMetadata.sourceSha256;
+    const oCachedDocument = bHashMatches ? parseJson(sCachedSource) : null;
 
     if (oCachedDocument) {
-      validateFlyerSource(oCachedDocument, sSourceUrl);
+      try {
+        const oCachedFlyer = validateFlyerSource(oCachedDocument, sSourceUrl);
 
-      return {
-        document: oCachedDocument,
-        sourceUrl: sSourceUrl,
-        sourceFile: sCachedSourcePath,
-        retrievedAt: oCachedMetadata.retrievedAt,
-        reused: true,
-        metadata: oCachedMetadata
-      };
+        validateFlyerSelection(
+          oCachedFlyer,
+          oSelection,
+          oConfig.referenceDate,
+          relativePath(oConfig.rootDir, sCachedSourcePath)
+        );
+
+        return {
+          document: oCachedDocument,
+          sourceUrl: sSourceUrl,
+          sourceFile: sCachedSourcePath,
+          retrievedAt: oCachedMetadata.retrievedAt,
+          reused: true,
+          metadata: oCachedMetadata
+        };
+      } catch (oError) {
+        if (!(oError instanceof LidlPipelineError)) {
+          throw oError;
+        }
+      }
     }
+
+    await fs.rm(oFlyerPaths.sourceMetadata, { force: true });
   }
 
   let oDocument;
@@ -415,6 +433,13 @@ async function loadFlyerSource(oConfig, oFlyerPaths, oDiscovery, oSelection) {
     oError.message += "; raw response preserved at " + relativePath(oConfig.rootDir, sSourcePath);
     throw oError;
   }
+
+  validateFlyerSelection(
+    oFlyer,
+    oSelection,
+    oConfig.referenceDate,
+    relativePath(oConfig.rootDir, sSourcePath)
+  );
 
   const oMetadata = {
     kind: "lidl-flyer-source",

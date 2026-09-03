@@ -194,6 +194,8 @@ test("rejects a flyer source whose dates differ from the selected event", async 
   const sRoot = await createTestRoot(oTestContext);
   const oMismatchedSource = createFlyerSource();
   const aRequests = [];
+  const sFlyerDirectory = path.join(sRoot, "data", "raw", "offers", "lidl", "flyers", FLYER_IDENTIFIER);
+  const sMetadataPath = path.join(sFlyerDirectory, "source.metadata.json");
 
   oMismatchedSource.flyer.offerStartDate = "2026-07-27";
   oMismatchedSource.flyer.offerEndDate = "2026-08-01";
@@ -223,6 +225,30 @@ test("rejects a flyer source whose dates differ from the selected event", async 
     return true;
   });
   assert.equal(aRequests.length, 2);
+  assert.equal(
+    (await fs.readdir(sFlyerDirectory)).filter(function (sFileName) {
+      return /^source-[a-f0-9]{16}\.json$/.test(sFileName);
+    }).length,
+    1
+  );
+  await assert.rejects(fs.access(sMetadataPath), { code: "ENOENT" });
+
+  const aRecoveryRequests = [];
+  const oRecoveryResult = await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    sleep: noSleep,
+    fetch: createSuccessfulFetch(aRecoveryRequests),
+    extractPdf: copyExtractionFixture
+  });
+
+  assert.equal(aRecoveryRequests.length, 2);
+  assert.deepEqual(oRecoveryResult.qualityReport.artifactReuse, {
+    discovery: true,
+    flyerSource: false,
+    pdf: false,
+    extraction: false
+  });
+  assert.equal((await readJson(sMetadataPath)).validTo, "2026-07-25");
 });
 
 test("bounds retries and reports the final network cause", async function (oTestContext) {
