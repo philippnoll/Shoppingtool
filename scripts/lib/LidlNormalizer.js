@@ -21,6 +21,8 @@ function normalizeFlyer(oResponse, oOptions) {
     validTo: oFlyer.offerEndDate || oFlyer.endDate,
     sourceUrl: oFlyer.flyerUrlAbsolute,
     fetchedAt: oConfig.fetchedAt || null,
+    pdfUrl: oConfig.pdfUrl || oFlyer.pdfUrl || null,
+    provenance: oConfig.provenance || null,
     pages: (oFlyer.pages || []).map(normalizePage)
   };
 }

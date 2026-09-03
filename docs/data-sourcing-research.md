@@ -461,3 +461,90 @@ Butter, Brot und Kaese. Die Promotion darf die echte Angebotsmenge nicht in
 `Stk` umdeuten. Vor der UI-Anbindung muss deshalb entschieden werden, wie
 stueckbasierte Listeneingaben mit gewichtsbezogenen Packungen kompatibel
 gemacht werden.
+
+## Wiederholbare End-to-End-Pipeline
+
+Stand: 2026-07-27
+
+Phase 3 verbindet die vorhandenen, bewusst getrennten Stufen:
+
+```text
+Prospekt-Uebersicht
+  -> Aktionsprospekt aus JSON-LD waehlen
+  -> Flyer-Endpunkt und PDF als Rohdaten sichern
+  -> pdftotext Layout + bbox
+  -> unveraenderte Kandidaten
+  -> konservatives ProductMatcher-Ergebnis
+  -> Review oder Promotion
+  -> Qualitaetsbericht
+```
+
+Der normale Lauf braucht nur ein Kommando:
+
+```bash
+npm run pipeline:lidl
+```
+
+`--as-of YYYY-MM-DD` reproduziert Auswahl und Gueltigkeitspruefung fuer einen
+bestimmten Tag. `--force` umgeht die sichere Wiederverwendung, wenn eine Quelle
+bewusst erneut untersucht werden soll.
+
+### Artefakte Und Provenienz
+
+Die Pipeline verwendet einen stabilen Prospekt-Identifier fuer fachliche
+Ausgabedateien. Ein erneuter Lauf schreibt deshalb denselben Prospekt-Snapshot
+neu und haengt nicht dieselben Angebote als Duplikate an. Discovery-Antworten,
+rohe Flyer-Quellen und PDFs werden mit ihrem Inhalts-Hash abgelegt;
+Extraktionen tragen den Hash des zugehoerigen PDFs. Eine spaetere
+Quellenaenderung ueberschreibt dadurch nicht die Belege eines frueheren Laufs.
+Nur die Discovery-Metadatei zeigt jeweils auf den letzten Abruf.
+Lokal erhalten bleiben:
+
+- die Discovery-Antwort und ihre Abrufmetadaten;
+- pro Prospekt die unveraenderte Flyer-JSON, Quell-URL, Abrufzeit und PDF;
+- PDF-Hash, Layout-Text, Positions-XHTML und Extraktionszeit;
+- normalisierte Flyer-Metadaten;
+- getrennte Kandidaten-, Review-, optimizer-ready- und Quality-Dateien.
+
+Die Provenienz in den erzeugten Dokumenten verweist auf Prospekt-ID,
+Quell-Dateien, URLs, Abrufzeiten, Gueltigkeitszeitraum und PDF-Hash. Damit kann
+ein spaeterer Parserfehler gegen die damalige Quelle untersucht werden. Diese
+laufzeitgenerierten Dateien bleiben ueber `.gitignore` ausserhalb von Git;
+versioniert werden nur kleine Fixtures.
+
+### Schonende Wiederverwendung Und Netzwerkfehler
+
+Eine frische Discovery-Antwort wird fuer einen begrenzten Zeitraum
+wiederverwendet, wenn die gespeicherte Datei weiterhin ihren SHA-256-Hash hat.
+Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet als
+wiederverwendbar, wenn ihr gespeicherter Hash passt und Struktur sowie
+ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
+bleiben als inhaltsadressierte Rohdaten erhalten, werden aber nicht als
+aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
+und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
+PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
+
+Netzwerkabrufe haben einen Timeout, standardmaessig maximal drei Versuche und
+eine steigende kurze Wartezeit. Nur typische temporaere Statuscodes sowie
+Netzwerk- und Timeoutfehler werden erneut versucht. Permanente HTTP-Fehler
+werden sofort, temporaere Fehler nach dem letzten Versuch mit ihrer
+eigentlichen Ursache gemeldet. Es gibt keine unbegrenzten Retries.
+
+### Explizite Fehler Und Qualitaetsbericht
+
+Der Lauf stoppt mit benannter Pipeline-Stufe bei:
+
+- nicht mehr erkennbarem JSON-LD oder veraenderter Flyer-JSON-Struktur;
+- keinem aktiven oder kommenden Aktionsprospekt fuer das Referenzdatum;
+- vom ausgewaehlten JSON-LD-Ereignis abweichenden Flyer-Gueltigkeitsdaten;
+- fehlender `pdfUrl`;
+- einer Antwort ohne PDF-Signatur;
+- fehlendem `pdftotext`, leerer oder unlesbarer Extraktion;
+- unlesbaren Marktstammdaten oder einem Promotionfehler.
+
+Die bereits gespeicherten Rohartefakte werden dabei nicht geloescht. Der
+Erfolgslauf erzeugt `<prospekt>.quality-report.json` mit Seitenzahl,
+Kandidatenzahl, Match-Arten, Trefferzahl, Promotionszahl, Review-Gruenden,
+Warnungen, Wiederverwendungsstatus sowie den wichtigsten Quell- und
+Ausgabepfaden. Die automatisierten Tests verwenden lokale Fixtures und ein
+injiziertes Fake-Netzwerk; `npm test` braucht daher keine Lidl-Verfuegbarkeit.

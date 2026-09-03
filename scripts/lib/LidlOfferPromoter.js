@@ -89,7 +89,8 @@ function promoteDocument(oCandidateDocument, aStores, oOptions) {
     validFrom: oDocument.validFrom || null,
     validTo: oDocument.validTo || null,
     generatedAt: sGeneratedAt,
-    referenceDate: oResult.referenceDate
+    referenceDate: oResult.referenceDate,
+    provenance: oDocument.provenance || null
   };
 
   return {
