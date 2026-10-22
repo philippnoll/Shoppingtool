@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
@@ -138,6 +139,153 @@ test("preserves content-addressed discovery responses across refreshed runs", as
   assert.notEqual(sSecondRelativePath, sFirstRelativePath);
   assert.equal(await fs.readFile(sFirstPath, "utf8"), sFirstBody);
   assert.equal(await fs.readFile(path.join(sRoot, sSecondRelativePath), "utf8"), sChangedDiscovery);
+});
+
+test("does not cache rejected direct JSON and recovers without forcing", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oSource = createFlyerSource();
+  const sMetadataPath = path.join(sRoot, "data", "raw", "offers", "lidl", "discovery.metadata.json");
+
+  delete oSource.flyer.pdfUrl;
+  await assert.rejects(function () {
+    return LidlOfferPipeline.run(createOptions(sRoot), {
+      now: fixedNow,
+      fetch: async function () {
+        return response(JSON.stringify(oSource), 200, "application/json");
+      }
+    });
+  }, function (oError) {
+    assert.equal(oError.code, "missing-pdf-url");
+    assert.match(oError.message, /raw response preserved at/);
+    return true;
+  });
+  await assert.rejects(fs.access(sMetadataPath), { code: "ENOENT" });
+
+  const aRawFiles = await fs.readdir(path.dirname(sMetadataPath));
+  const sRawFile = aRawFiles.find(function (sName) {
+    return /^discovery-.*\.response\.json$/.test(sName);
+  });
+
+  assert.deepEqual(await readJson(path.join(path.dirname(sMetadataPath), sRawFile)), oSource);
+  oSource.flyer.pdfUrl = PDF_URL;
+  const oResult = await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    fetch: async function (sUrl) {
+      return sUrl === DISCOVERY_URL
+        ? response(JSON.stringify(oSource), 200, "application/json")
+        : response("%PDF-1.7 synthetic fixture", 200, "application/pdf");
+    },
+    extractPdf: copyExtractionFixture
+  });
+
+  assert.equal(oResult.qualityReport.artifactReuse.discovery, false);
+  assert.equal(oResult.qualityReport.promotionCount, 1);
+});
+
+test("refreshes a previously cached invalid direct JSON response", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+
+  await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    fetch: createSuccessfulFetch([]),
+    extractPdf: copyExtractionFixture
+  });
+  const sMetadataPath = path.join(sRoot, "data", "raw", "offers", "lidl", "discovery.metadata.json");
+  const oMetadata = await readJson(sMetadataPath);
+  const oInvalidSource = createFlyerSource();
+
+  delete oInvalidSource.flyer.pdfUrl;
+  const sInvalidBody = JSON.stringify(oInvalidSource);
+
+  oMetadata.contentType = "application/json";
+  oMetadata.sourceSha256 = crypto.createHash("sha256").update(sInvalidBody).digest("hex");
+  await fs.writeFile(path.join(sRoot, oMetadata.sourceFile), sInvalidBody);
+  await fs.writeFile(sMetadataPath, JSON.stringify(oMetadata));
+
+  const aRequests = [];
+  const oResult = await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    fetch: createSuccessfulFetch(aRequests),
+    extractPdf: copyExtractionFixture
+  });
+
+  assert.deepEqual(aRequests, [DISCOVERY_URL]);
+  assert.equal(oResult.qualityReport.artifactReuse.discovery, false);
+});
+
+test("uses refreshed direct JSON while reusing identical cached source bodies", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oSource = createFlyerSource();
+  const aRequests = [];
+  const oDependencies = {
+    now: fixedNow,
+    fetch: async function (sUrl) {
+      aRequests.push(sUrl);
+      return sUrl === DISCOVERY_URL
+        ? response(JSON.stringify(oSource), 200, "application/json")
+        : response("%PDF-1.7 synthetic fixture", 200, "application/pdf");
+    },
+    extractPdf: copyExtractionFixture
+  };
+  const oFirstResult = await LidlOfferPipeline.run(createOptions(sRoot), oDependencies);
+  const oRepeatedResult = await LidlOfferPipeline.run(createOptions(sRoot), oDependencies);
+
+  assert.equal(oRepeatedResult.qualityReport.artifactReuse.flyerSource, true);
+  assert.deepEqual(aRequests, [DISCOVERY_URL, PDF_URL]);
+
+  oSource.flyer.pdfUrl = "https://example.test/corrected.pdf";
+  oSource.flyer.offerEndDate = "2026-07-26";
+  oDependencies.now = function () {
+    return new Date(NOW.getTime() + 7 * 60 * 60 * 1000);
+  };
+  const oRefreshedResult = await LidlOfferPipeline.run(createOptions(sRoot), oDependencies);
+  const oReport = oRefreshedResult.qualityReport;
+
+  assert.deepEqual(aRequests, [DISCOVERY_URL, PDF_URL, DISCOVERY_URL, oSource.flyer.pdfUrl]);
+  assert.equal(oReport.artifactReuse.discovery, false);
+  assert.equal(oReport.artifactReuse.flyerSource, false);
+  assert.equal(oReport.source.pdfUrl, oSource.flyer.pdfUrl);
+  assert.equal(oReport.source.validTo, "2026-07-26");
+  assert.equal(oReport.source.discoverySha256, oReport.source.flyerSourceSha256);
+  assert.notEqual(oReport.source.flyerSourceSha256, oFirstResult.qualityReport.source.flyerSourceSha256);
+});
+
+test("retries extraction after a forced attempt leaves parseable partial outputs", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+
+  await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    fetch: createSuccessfulFetch([]),
+    extractPdf: copyExtractionFixture
+  });
+
+  await assert.rejects(function () {
+    return LidlOfferPipeline.run(Object.assign(createOptions(sRoot), { force: true }), {
+      now: fixedNow,
+      fetch: createSuccessfulFetch([]),
+      extractPdf: async function (oInput) {
+        await copyExtractionFixture(oInput);
+        await fs.writeFile(oInput.textPath, "partial extraction");
+        throw new Error("synthetic partial extraction failure");
+      }
+    });
+  }, { code: "extraction-failed" });
+
+  let iExtractions = 0;
+  const oResult = await LidlOfferPipeline.run(createOptions(sRoot), {
+    now: fixedNow,
+    fetch: async function () {
+      throw new Error("network should not be used for extraction recovery");
+    },
+    extractPdf: async function (oInput) {
+      iExtractions += 1;
+      await copyExtractionFixture(oInput);
+    }
+  });
+
+  assert.equal(iExtractions, 1);
+  assert.equal(oResult.qualityReport.artifactReuse.extraction, false);
+  assert.equal(oResult.qualityReport.promotionCount, 1);
 });
 
 test("rejects discovery pages that contain only expired flyers", function () {

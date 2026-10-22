@@ -34,7 +34,7 @@ async function run(oOptions, oDependencies) {
   const oConfig = createConfig(oOptions, oDependencies);
   const oPaths = createPaths(oConfig.rootDir);
   const oDiscovery = await loadDiscovery(oConfig, oPaths);
-  const oSelection = selectFlyerSource(oDiscovery.body, oDiscovery.contentType, oConfig.referenceDate);
+  const oSelection = oDiscovery.selection;
   const sFlyerIdentifier = oSelection.flyerIdentifier;
   const sSafeIdentifier = safeFileName(sFlyerIdentifier);
   const oFlyerPaths = createFlyerPaths(oPaths, sSafeIdentifier);
@@ -178,15 +178,28 @@ async function loadDiscovery(oConfig, oPaths) {
     const sBody = await readTextIfPresent(sRawPath);
 
     if (sBody !== null && sha256(Buffer.from(sBody, "utf8")) === oCachedMetadata.sourceSha256) {
-      return {
-        body: sBody,
-        contentType: oCachedMetadata.contentType,
-        finalUrl: oCachedMetadata.finalUrl,
-        retrievedAt: oCachedMetadata.retrievedAt,
-        sourceFile: sRawPath,
-        sha256: oCachedMetadata.sourceSha256,
-        reused: true
-      };
+      try {
+        const oSelection = validateDiscoverySource(
+          oConfig, sBody, oCachedMetadata.contentType, oCachedMetadata.finalUrl, sRawPath
+        );
+
+        return {
+          body: sBody,
+          contentType: oCachedMetadata.contentType,
+          finalUrl: oCachedMetadata.finalUrl,
+          retrievedAt: oCachedMetadata.retrievedAt,
+          sourceFile: sRawPath,
+          sha256: oCachedMetadata.sourceSha256,
+          selection: oSelection,
+          reused: true
+        };
+      } catch (oError) {
+        if (!(oError instanceof LidlPipelineError)) {
+          throw oError;
+        }
+
+        await fs.rm(sMetadataPath, { force: true });
+      }
     }
   }
 
@@ -215,10 +228,10 @@ async function loadDiscovery(oConfig, oPaths) {
     sourceSha256: sSourceHash
   };
 
-  await Promise.all([
-    writeFile(sRawPath, sBody),
-    writeJson(sMetadataPath, oMetadata)
-  ]);
+  await writeFile(sRawPath, sBody);
+  const oSelection = validateDiscoverySource(oConfig, sBody, sContentType, oMetadata.finalUrl, sRawPath);
+
+  await writeJson(sMetadataPath, oMetadata);
 
   return {
     body: sBody,
@@ -227,8 +240,26 @@ async function loadDiscovery(oConfig, oPaths) {
     retrievedAt: sRetrievedAt,
     sourceFile: sRawPath,
     sha256: sSourceHash,
+    selection: oSelection,
     reused: false
   };
+}
+
+function validateDiscoverySource(oConfig, sBody, sContentType, sSourceUrl, sSourceFile) {
+  try {
+    const oSelection = selectFlyerSource(sBody, sContentType, oConfig.referenceDate);
+
+    if (oSelection.kind === "direct-json") {
+      const oFlyer = validateFlyerSource(oSelection.document, sSourceUrl);
+
+      validateFlyerSelection(oFlyer, oSelection, oConfig.referenceDate, relativePath(oConfig.rootDir, sSourceFile));
+    }
+
+    return oSelection;
+  } catch (oError) {
+    oError.message += "; raw response preserved at " + relativePath(oConfig.rootDir, sSourceFile);
+    throw oError;
+  }
 }
 
 function canReuseDiscovery(oMetadata, oConfig) {
@@ -343,7 +374,8 @@ async function loadFlyerSource(oConfig, oFlyerPaths, oDiscovery, oSelection) {
     : createFlyerApiUrl(oConfig.flyerApiUrl, oSelection.flyerIdentifier);
   const oCachedMetadata = oConfig.force ? null : await readJsonIfPresent(oFlyerPaths.sourceMetadata);
 
-  if (oCachedMetadata && oCachedMetadata.sourceUrl === sSourceUrl && oCachedMetadata.sourceFile) {
+  if (oCachedMetadata && oCachedMetadata.sourceUrl === sSourceUrl && oCachedMetadata.sourceFile &&
+      (oSelection.kind !== "direct-json" || oCachedMetadata.sourceSha256 === oDiscovery.sha256)) {
     const sCachedSourcePath = path.resolve(oConfig.rootDir, oCachedMetadata.sourceFile);
     const sCachedSource = await readTextIfPresent(sCachedSourcePath);
     const bHashMatches = sCachedSource !== null && Boolean(oCachedMetadata.sourceSha256) &&
@@ -640,6 +672,7 @@ async function extractPdf(oConfig, oPaths, sIdentifier, oPdf) {
   }
 
   await fs.mkdir(sOutputDirectory, { recursive: true });
+  await fs.rm(sMetadataPath, { force: true });
 
   try {
     await oConfig.extractPdf({
