@@ -63,12 +63,15 @@ npm run pipeline:lidl
 The command discovers the active Lidl `Aktionsprospekt` (or the nearest
 upcoming one when none is active), retrieves or safely reuses its source JSON
 and PDF, extracts text, parses candidates, matches and promotes them, and
-writes a quality report. `--as-of YYYY-MM-DD` makes selection and validity
-checks reproducible; `--force` deliberately refreshes otherwise reusable
-artifacts:
+writes a quality report. `--as-of YYYY-MM-DD` sets the reference date for
+selection and validity checks; the default is today's UTC date. It uses the
+available discovery response, so it does not retrieve historical flyers that
+are no longer listed. For historical checks on saved candidates, use
+[the separate promotion command](docs/data-sourcing-research.md#promotion-und-review).
+`--force` deliberately refreshes otherwise reusable artifacts:
 
 ```bash
-npm run pipeline:lidl -- --as-of 2026-07-23
+npm run pipeline:lidl -- --as-of YYYY-MM-DD
 npm run pipeline:lidl -- --force
 ```
 
@@ -80,15 +83,8 @@ Outputs stay outside Git:
 - `data/normalized/offers/lidl/`: separate `.candidates.json`, `.review.json`,
   `.optimizer-ready.json` and `.quality-report.json` files.
 
-Business outputs are named by stable flyer identity, so repeated runs replace
-the same snapshot rather than append duplicate offers. Discovery responses and
-raw flyer sources are content-addressed; PDFs and extracted text are keyed by
-the PDF content hash. A changed artifact therefore does not overwrite the
-evidence behind an older run. Fresh discovery data and validated
-flyer/PDF/extraction artifacts are reused when safe. Network requests use
-finite timeouts and retries; source-shape, missing-PDF, invalid-PDF, extraction
-and promotion failures stop the command with an explicit step and cause. Raw
-files remain available for diagnosis.
+For artifact identity, provenance, reuse rules and failure handling, see
+[the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
 
 ## Documentation
 

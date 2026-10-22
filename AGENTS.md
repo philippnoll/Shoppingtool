@@ -129,10 +129,10 @@ The Lidl source investigation established:
 - `LidlOfferPromoter` keeps parser and matcher confidence separate, validates source fields and validity, deduplicates stable source rows, resolves store names, and reports every rejected candidate with reasons.
 - Parser confidence below 0.9 is reviewed instead of promoted.
 - Lidl Plus prices are marked as loyalty-program conditions and excluded from generally available optimizer-ready data.
-- For the valid historical date 2026-07-23, the 200-candidate flyer produces 8 optimizer-ready offers and 192 review entries. With the current date 2026-07-26, all 200 are correctly rejected as expired.
+- Historical promotion results and validity checks are recorded in [the promotion reference](docs/data-sourcing-research.md#promotion-und-review).
 - `parse:lidl-offers` now creates candidate, review, and optimizer-ready files in one run; `promote:lidl-offers` can reprocess an existing candidate file.
-- `pipeline:lidl` now runs discovery through quality reporting, preserves flyer-specific provenance and raw artifacts, safely reuses cached artifacts, and fails explicitly on source, PDF, extraction, or promotion problems.
-- The next product step is Phase 4: connect optimizer-ready offers to the UI5 app in small learning units.
+- Pipeline provenance, artifact reuse and failure handling are documented in [the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
+- The next product step is documented in [Phase 4 of the roadmap](ROADMAP.md#phase-4-echte-angebote-in-die-ui5-app-einbinden).
 
 ## Verified Commands
 
@@ -149,7 +149,7 @@ npm run build
 ## Next Useful Steps
 
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
-- Use `npm run pipeline:lidl` for a current end-to-end Lidl snapshot; generated artifacts and the quality report stay outside Git under `data/`.
+- For running the Lidl pipeline, see [the README](README.md#lidl-offer-pipeline).
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
 - Treat `ROADMAP.md` as the authoritative ordered handoff for future work.
 

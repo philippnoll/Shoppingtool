@@ -79,34 +79,12 @@ Die Lidl-App-Bons des Users sind sehr wertvoll:
 
 Einschraenkung: Bons zeigen vergangene Einkaeufe, nicht zukuenftige Angebote. Aber sie sind sehr gut, um unser Produktmodell und die Normalisierung zu trainieren.
 
-## Empfohlener Naechster Schritt
+## Einstieg In Die Lidl-Datenkette
 
-Nicht direkt Datenbank bauen.
-
-Erst einen kleinen Scraper-/Importer-Spike bauen. Wir starten mit Lidl, weil Lidl in der ersten echten Markt-Kohorte des Users liegt.
-
-```text
-scripts/discover-lidl-offers.js
-        |
-        v
-data/raw/offers/lidl/*.html
-        |
-        v
-data/raw/offers/lidl/*.analysis.json
-        |
-        v
-data/normalized/offers.json
-        |
-        v
-ShoppingOptimizer bekommt normalized offers
-```
-
-Der Spike darf erstmal nur ein JSON-File erzeugen. Ziel ist nicht Perfektion, sondern herauszufinden:
-
-1. Kommen wir ueberhaupt an strukturierte Angebotsdaten?
-2. Welche Felder bekommen wir wirklich?
-3. Wie stark unterscheiden sich die Haendler?
-4. Was muessen wir normalisieren?
+Der Discovery-Spike ist inzwischen Teil der
+[wiederholbaren End-to-End-Pipeline](#wiederholbare-end-to-end-pipeline).
+Die Anbindung ihrer Ergebnisse an den `ShoppingOptimizer` ist der naechste
+Schritt in [Phase 4 der Roadmap](../ROADMAP.md#phase-4-echte-angebote-in-die-ui5-app-einbinden).
 
 ## Erste Lokale Markt-Kohorte
 
@@ -444,7 +422,7 @@ Der 200-Kandidaten-Prospekt ergab fuer den historischen Stichtag 23.07.2026:
 - 17 Lidl-Plus-Bedingungen
 - 6 zu niedrige Parser-Konfidenzen
 
-Die Gruende koennen sich pro Kandidat ueberschneiden. Mit dem aktuellen Datum
+Die Gruende koennen sich pro Kandidat ueberschneiden. Mit dem Referenzdatum
 26.07.2026 werden korrekt alle 200 Kandidaten als abgelaufen und kein Angebot
 als optimizerfaehig bewertet.
 
@@ -479,15 +457,8 @@ Prospekt-Uebersicht
   -> Qualitaetsbericht
 ```
 
-Der normale Lauf braucht nur ein Kommando:
-
-```bash
-npm run pipeline:lidl
-```
-
-`--as-of YYYY-MM-DD` reproduziert Auswahl und Gueltigkeitspruefung fuer einen
-bestimmten Tag. `--force` umgeht die sichere Wiederverwendung, wenn eine Quelle
-bewusst erneut untersucht werden soll.
+Aufruf, Voraussetzungen, Datumsoption und Ausgabeverzeichnisse stehen in der
+[README](../README.md#lidl-offer-pipeline).
 
 ### Artefakte Und Provenienz
 
@@ -497,7 +468,9 @@ neu und haengt nicht dieselben Angebote als Duplikate an. Discovery-Antworten,
 rohe Flyer-Quellen und PDFs werden mit ihrem Inhalts-Hash abgelegt;
 Extraktionen tragen den Hash des zugehoerigen PDFs. Eine spaetere
 Quellenaenderung ueberschreibt dadurch nicht die Belege eines frueheren Laufs.
-Nur die Discovery-Metadatei zeigt jeweils auf den letzten Abruf.
+Discovery-, Quell- und Extraktionsmetadateien werden dagegen aktualisiert;
+auch normalisierte Ausgaben und Qualitaetsberichte sind ersetzbare Snapshots,
+kein Archiv aller Laeufe.
 Lokal erhalten bleiben:
 
 - die Discovery-Antwort und ihre Abrufmetadaten;
@@ -516,13 +489,17 @@ versioniert werden nur kleine Fixtures.
 
 Eine frische Discovery-Antwort wird fuer einen begrenzten Zeitraum
 wiederverwendet, wenn die gespeicherte Datei weiterhin ihren SHA-256-Hash hat.
-Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet als
-wiederverwendbar, wenn ihr gespeicherter Hash passt und Struktur sowie
-ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
+Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet und
+Quell-URL als wiederverwendbar, wenn ihr gespeicherter Hash passt und Struktur
+sowie ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
 bleiben als inhaltsadressierte Rohdaten erhalten, werden aber nicht als
 aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
 und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
 PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
+Flyer-Quelle und PDF haben keine eigene zeitliche Ablaufgrenze. Aenderungen
+beim Anbieter unter unveraenderter URL werden bei Wiederverwendung nicht
+abgerufen; dafuer dient `--force`. Bei direktem Flyer-JSON als Discovery-Quelle
+muss zusaetzlich der Quell-Hash zur verwendeten Discovery-Antwort passen.
 
 Netzwerkabrufe haben einen Timeout, standardmaessig maximal drei Versuche und
 eine steigende kurze Wartezeit. Nur typische temporaere Statuscodes sowie

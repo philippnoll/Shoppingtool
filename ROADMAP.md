@@ -397,34 +397,11 @@ Status: umgesetzt.
 Ziel: Ein neuer Lidl-Prospekt kann ohne manuelle Dateisuche verarbeitet
 werden.
 
-Umgesetzte Arbeitspakete:
-
-1. `npm run pipeline:lidl` orchestriert Discovery, Flyer-JSON, PDF-Download,
-   `pdftotext`, Parsing, konservatives Matching, Promotion und Reporting.
-2. Netzwerkabrufe haben begrenzte Timeouts und standardmaessig maximal drei
-   Versuche mit Wartezeit. Der letzte HTTP-, Timeout- oder Netzwerkgrund bleibt
-   sichtbar.
-3. Die inhaltsadressierte Discovery-Antwort wird kurzzeitig wiederverwendet,
-   wenn ihr Hash weiterhin passt. Flyer-Quelle, PDF und Extraktion werden nur
-   bei passender URL beziehungsweise passendem PDF-Hash wiederverwendet;
-   `--force` erzwingt bewusst einen Neuabruf.
-4. Stabile Dateinamen pro Prospekt verhindern fachliche Duplikate bei
-   Wiederholungen. Kandidaten, Review und optimizerfaehige Angebote bleiben
-   getrennte Dateien.
-5. Provenienz behaelt Prospekt-Identifier und -ID, Quell-URLs und -dateien,
-   Abrufzeiten, Gueltigkeit, PDF-Hash und positionierte Textdatei. Rohe Quellen
-   sind inhaltsadressiert; PDFs und Extraktionen sind ueber den PDF-Hash
-   abgelegt, damit ein geaenderter Abruf fruehere Diagnosebelege nicht
-   ueberschreibt.
-6. Der Qualitaetsbericht enthaelt Seiten, Kandidaten, Match-Arten, Promotions,
-   Review-Gruende, Warnungen, Wiederverwendung und wichtige Quelldaten.
-7. Fehlende oder ungueltige PDFs, veraenderte Quellen, Extraktions- und
-   Promotionfehler brechen mit benannter Stufe und Ursache ab. Rohdaten bleiben
-   zur Diagnose erhalten. Gibt es weder einen aktiven noch einen kommenden
-   Aktionsprospekt, endet der Lauf statt einen abgelaufenen auszuwaehlen.
-8. Deterministische Tests decken Erfolg, Wiederverwendung, begrenzte Retries,
-   Quellen-/PDF-Aenderungen, Extraktionsfehler und Berichtsaggregation ab, ohne
-   Live-Lidl-Abhaengigkeit.
+Die Orchestrierung ist implementiert. Aufruf und Voraussetzungen stehen in der
+[README](README.md#lidl-offer-pipeline); Datenfluss, Provenienz,
+Wiederverwendung, Fehlerfaelle und Qualitaetsbericht in der
+[Pipeline-Referenz](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
+Die deterministische Abdeckung steht in `test/lidlOfferPipeline.test.js`.
 
 Weitere echte Seiten werden weiterhin als kleine Fixtures aufgenommen, sobald
 neue Layouts auftreten.
@@ -636,21 +613,10 @@ npm run serve -- --port 8080
 npm test
 npm run lint
 npm run build
-npm run pipeline:lidl
 ```
 
-Kompletter Lidl-Lauf:
-
-```bash
-npm run pipeline:lidl
-npm run pipeline:lidl -- --as-of YYYY-MM-DD
-npm run pipeline:lidl -- --force
-```
-
-Die erzeugte `.quality-report.json` nennt Quellen, Abrufzeiten,
-Wiederverwendung, Seiten/Kandidaten, Match-Arten, Review-Gruende und Outputs.
-Alle erzeugten Roh- und Ergebnisdateien unter `data/` bleiben von Git
-ausgeschlossen.
+Der komplette Lidl-Lauf ist in der [README](README.md#lidl-offer-pipeline)
+beschrieben.
 
 Lidl-Einzelschritte fuer gezielte Diagnose:
 
