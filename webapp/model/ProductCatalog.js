@@ -42,7 +42,7 @@
       category: "Gemuese",
       aliases: ["tomate"],
       offerAliases: ["romatomaten", "rispentomaten"],
-      offerExclusions: ["tomatenketchup", "tomatensauce", "gehackte tomaten"]
+      offerExclusions: ["tomatenketchup", "tomatensauce", "gehackte tomaten", "passierte tomaten"]
     },
     {
       key: "brot",
@@ -81,7 +81,7 @@
       unit: "g",
       category: "Vorrat",
       aliases: [],
-      offerAliases: [],
+      offerAliases: ["barilla la collezione"],
       offerExclusions: []
     },
     {
@@ -111,7 +111,7 @@
       unit: "kg",
       category: "Obst",
       aliases: [],
-      offerAliases: [],
+      offerAliases: ["tafelaepfel"],
       offerExclusions: []
     }
   ];

@@ -41,6 +41,18 @@ test("matches conservative retailer product names", function () {
     confidence: 0.95,
     matchedTerm: "aepfel"
   });
+  assert.deepEqual(compact(ProductMatcher.match("Barilla La Collezione")), {
+    productKey: "nudeln",
+    matchType: "offer-alias-exact",
+    confidence: 0.98,
+    matchedTerm: "barilla la collezione"
+  });
+  assert.deepEqual(compact(ProductMatcher.match("Tafeläpfel aus dem Alten Land")), {
+    productKey: "aepfel",
+    matchType: "offer-alias-term",
+    confidence: 0.9,
+    matchedTerm: "tafelaepfel"
+  });
 });
 
 test("rejects misleading compound and processed product names", function () {
@@ -48,7 +60,8 @@ test("rejects misleading compound and processed product names", function () {
     "KANIA Tomatenketchup",
     "KANIA Tomaten-Ketchup",
     "COMBINO Tomaten-sauce",
-    "BARESA Gehackte Tomaten"
+    "BARESA Gehackte Tomaten",
+    "Mutti Passierte Tomaten"
   ].forEach(function (sRawName) {
     assert.deepEqual(compact(ProductMatcher.match(sRawName)), {
       productKey: null,

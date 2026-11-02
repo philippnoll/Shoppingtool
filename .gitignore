@@ -13,3 +13,5 @@ data/normalized/offers/lidl/*
 !data/normalized/offers/lidl/.gitkeep
 data/normalized/offers/aldi-nord/*
 !data/normalized/offers/aldi-nord/.gitkeep
+data/normalized/offers/kk/*
+!data/normalized/offers/kk/.gitkeep
