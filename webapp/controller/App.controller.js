@@ -2,8 +2,9 @@ sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/m/MessageToast",
   "shoppingtool/model/ProductRecognition",
-  "shoppingtool/model/ShoppingOptimizer"
-], function (Controller, MessageToast, ProductRecognition, ShoppingOptimizer) {
+  "shoppingtool/model/ShoppingOptimizer",
+  "shoppingtool/model/OfferModel"
+], function (Controller, MessageToast, ProductRecognition, ShoppingOptimizer, OfferModel) {
   "use strict";
 
   return Controller.extend("shoppingtool.controller.App", {
@@ -43,8 +44,10 @@ sap.ui.define([
 
     onOptimizeShopping: function () {
       var oModel = this.getView().getModel();
+      var oOffersModel = this.getView().getModel("offers");
+      var sOfferStatus = oOffersModel.getProperty("/status");
       var aItems = oModel.getProperty("/items");
-      var aOffers = oModel.getProperty("/offers");
+      var aOffers = oOffersModel.getProperty("/offers");
       var oSettings = oModel.getProperty("/optimizationSettings");
 
       if (!aItems.length) {
@@ -52,32 +55,36 @@ sap.ui.define([
         return;
       }
 
+      if (sOfferStatus === "loading") {
+        MessageToast.show("Aktuelle Angebote werden noch geladen.");
+        return;
+      }
+
+      if (sOfferStatus === "error") {
+        MessageToast.show("Lade zuerst aktuelle Angebotsdaten oder versuche es erneut.");
+        return;
+      }
+
+      if (oOffersModel.getProperty("/referenceDate") !== new Date().toISOString().slice(0, 10)) {
+        this.onRefreshOffers();
+        MessageToast.show("Angebote für den heutigen Tag werden neu geladen. Bitte danach erneut optimieren.");
+        return;
+      }
+
       oModel.setProperty("/optimizationResult", ShoppingOptimizer.optimize(aItems, aOffers, oSettings));
+    },
+
+    onRefreshOffers: function () {
+      OfferModel.refresh(this.getView().getModel("offers"));
+    },
+
+    onListItemChanged: function () {
+      this._clearOptimizationResult();
     },
 
     _clearOptimizationResult: function () {
       this.getView().getModel().setProperty("/optimizationResult", {
-        hasResult: false,
-        bestStore: {
-          storeName: "",
-          totalPrice: 0,
-          matchedItems: [],
-          missingItems: []
-        },
-        splitPlan: {
-          totalPrice: 0,
-          savingsComparedToBestStore: 0,
-          effectiveSavings: 0,
-          extraStoreCount: 0,
-          extraStorePenalty: 7,
-          totalExtraStorePenalty: 0,
-          isWorthwhile: false,
-          storeCount: 0,
-          stores: [],
-          matchedItems: [],
-          missingItems: []
-        },
-        stores: []
+        hasResult: false
       });
     }
   });

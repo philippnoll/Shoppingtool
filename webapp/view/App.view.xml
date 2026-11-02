@@ -108,14 +108,17 @@
                       <Input
                         value="{name}"
                         placeholder="Produkt"
-                        width="100%" />
+                        width="100%"
+                        change=".onListItemChanged" />
                       <StepInput
                         value="{quantity}"
                         min="1"
-                        width="7rem" />
+                        width="7rem"
+                        change=".onListItemChanged" />
                       <Select
                         selectedKey="{unit}"
-                        width="6.5rem">
+                        width="6.5rem"
+                        change=".onListItemChanged">
                         <core:Item key="Stk" text="Stk" />
                         <core:Item key="g" text="g" />
                         <core:Item key="kg" text="kg" />
@@ -139,7 +142,51 @@
             </List>
 
             <Panel
-              headerText="Preisoptimierung"
+              headerText="Aktuelle Angebote"
+              class="sapUiSmallMarginTop">
+              <VBox>
+                <HBox
+                  alignItems="Center"
+                  justifyContent="SpaceBetween"
+                  class="sapUiTinyMarginBottom">
+                  <ObjectStatus
+                    text="{= ${offers>/status} === 'loading' ? 'Angebote werden geladen' : ${offers>/status} === 'ready' ? ${offers>/offers}.length + ' aktuelle Angebote geladen' : ${offers>/status} === 'empty' ? 'Keine aktuellen Angebote verfügbar' : 'Angebote konnten nicht geladen werden' }"
+                    state="{= ${offers>/status} === 'ready' ? 'Success' : ${offers>/status} === 'error' ? 'Error' : 'Information' }" />
+                  <Button
+                    text="{= ${offers>/status} === 'error' ? 'Erneut laden' : 'Aktualisieren' }"
+                    icon="sap-icon://refresh"
+                    enabled="{= !${offers>/loading} }"
+                    press=".onRefreshOffers" />
+                </HBox>
+                <MessageStrip
+                  text="Die aktuell gültigen Angebotsdaten werden geladen."
+                  type="Information"
+                  showIcon="true"
+                  visible="{offers>/loading}" />
+                <MessageStrip
+                  text="{offers>/errorMessage}"
+                  type="Error"
+                  showIcon="true"
+                  visible="{= ${offers>/status} === 'error' }" />
+                <MessageStrip
+                  text="Keine aktuellen, unbedingten Angebote veröffentlicht. Bitte den neuesten optimizer-ready Snapshot bereitstellen und erneut laden."
+                  type="Warning"
+                  showIcon="true"
+                  visible="{= ${offers>/status} === 'empty' }" />
+                <MessageStrip
+                  text="TESTDATEN aus einem UI-Fixture – keine echten oder aktuellen Angebote."
+                  type="Warning"
+                  showIcon="true"
+                  visible="{offers>/isDemo}" />
+                <Text
+                  text="{= ${offers>/status} === 'ready' ? ${offers>/excludedCount} + ' abgelaufene, ungültige, unbekannte oder bedingte Angebote ausgeschlossen.' : '' }"
+                  visible="{= ${offers>/status} === 'ready' &amp;&amp; ${offers>/excludedCount} > 0 }"
+                  class="mutedText" />
+              </VBox>
+            </Panel>
+
+            <Panel
+              headerText="Preisoptimierung mit aktuellen Angeboten"
               visible="{/optimizationResult/hasResult}"
               class="sapUiSmallMarginTop">
               <VBox>
@@ -148,16 +195,19 @@
                   justifyContent="SpaceBetween"
                   class="sapUiTinyMarginBottom">
                   <Title
-                    text="{/optimizationResult/bestStore/storeName}"
+                    text="{= ${/optimizationResult/bestStore/storeName} || 'Kein Laden mit passenden aktuellen Angeboten' }"
                     level="H3" />
                   <ObjectNumber
                     number="{/optimizationResult/bestStore/totalPrice}"
                     unit="EUR"
-                    state="Success" />
+                    state="Information" />
                 </HBox>
+                <Text
+                  text="Angebotssumme nur für die abgedeckten Artikel; kein vollständiger Regalpreis-Warenkorb."
+                  class="mutedText sapUiTinyMarginBottom" />
                 <ObjectStatus
-                  text="{= ${/optimizationResult/bestStore/missingItems}.length === 0 ? 'Alle Artikel gefunden' : ${/optimizationResult/bestStore/missingItems}.length + ' Artikel fehlen' }"
-                  state="{= ${/optimizationResult/bestStore/missingItems}.length === 0 ? 'Success' : 'Warning' }"
+                  text="{= ${/optimizationResult/bestStore/coveredItemCount} + ' von ' + ${/optimizationResult/bestStore/requestedItemCount} Listenartikeln abgedeckt' }"
+                  state="{= ${/optimizationResult/bestStore/isComplete} ? 'Success' : 'Warning' }"
                   class="sapUiSmallMarginBottom" />
                 <List
                   items="{/optimizationResult/bestStore/matchedItems}"
@@ -167,6 +217,15 @@
                     description="{= ${packages} + ' x ' + ${offerName} }"
                     info="{= ${totalPrice} + ' EUR' }"
                     infoState="Success" />
+                </List>
+                <List
+                  items="{/optimizationResult/bestStore/missingItems}"
+                  noDataText="Alle Listenartikel sind abgedeckt">
+                  <StandardListItem
+                    title="{name}"
+                    description="{coverageMessage}"
+                    info="Nicht abgedeckt"
+                    infoState="Warning" />
                 </List>
                 <Toolbar
                   design="Transparent"
@@ -178,17 +237,33 @@
                   <ObjectNumber
                     number="{/optimizationResult/splitPlan/totalPrice}"
                     unit="EUR"
-                    state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }" />
+                    state="Information" />
                 </Toolbar>
+                <Text
+                  text="Angebotssumme nur für die abgedeckten Artikel; kein vollständiger Regalpreis-Warenkorb."
+                  class="mutedText sapUiTinyMarginBottom" />
                 <ObjectStatus
-                  text="{= ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Preisersparnis ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR, Zusatzladen-Abzug ' + ${/optimizationResult/splitPlan/totalExtraStorePenalty} + ' EUR, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR' }"
-                  state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }"
+                  text="{= ${/optimizationResult/splitPlan/coveredItemCount} + ' von ' + ${/optimizationResult/splitPlan/requestedItemCount} Listenartikeln abgedeckt' }"
+                  state="{= ${/optimizationResult/splitPlan/isComplete} ? 'Success' : 'Warning' }"
+                  class="sapUiTinyMarginBottom" />
+                <ObjectStatus
+                  text="{= ${/optimizationResult/splitPlan/hasComparableCoverage} ? ${/optimizationResult/splitPlan/storeCount} + ' Laden/Läden, Ersparnis nur für gleiche Abdeckung: ' + ${/optimizationResult/splitPlan/savingsComparedToBestStore} + ' EUR; Zusatzladen-Abzug ' + ${/optimizationResult/splitPlan/totalExtraStorePenalty} + ' EUR, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR' : 'Keine Ersparnis berechnet: Einzelladen und Split decken unterschiedliche Artikel ab.' }"
+                  state="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Information' }"
                   class="sapUiSmallMarginBottom" />
                 <MessageStrip
-                  text="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Empfehlung: Split lohnt sich, effektiv ' + ${/optimizationResult/splitPlan/effectiveSavings} + ' EUR Ersparnis.' : 'Empfehlung: Ein Laden reicht. Der Split spart nach Zusatzladen-Abzug nicht genug.' }"
-                  type="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Warning' }"
+                  text="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Empfehlung: Split lohnt sich nach Zusatzladen-Abzug auf gleicher Artikelabdeckung.' : ${/optimizationResult/splitPlan/hasComparableCoverage} ? 'Empfehlung: Ein Laden reicht; der Split spart nach Zusatzladen-Abzug nicht genug.' : 'Die Teilsummen sind nicht vergleichbar, weil unterschiedlich viele Artikel abgedeckt werden.' }"
+                  type="{= ${/optimizationResult/splitPlan/isWorthwhile} ? 'Success' : 'Information' }"
                   showIcon="true"
                   class="sapUiSmallMarginBottom" />
+                <List
+                  items="{/optimizationResult/splitPlan/missingItems}"
+                  noDataText="Alle Listenartikel sind abgedeckt">
+                  <StandardListItem
+                    title="{name}"
+                    description="{coverageMessage}"
+                    info="Nicht abgedeckt"
+                    infoState="Warning" />
+                </List>
                 <List
                   items="{/optimizationResult/splitPlan/stores}"
                   noDataText="Keine Split-Angebote">

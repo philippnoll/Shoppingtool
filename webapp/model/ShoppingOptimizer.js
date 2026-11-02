@@ -8,10 +8,10 @@ sap.ui.define([], function () {
     var oBestStore;
 
     aStores.sort(compareStoreResults);
-    oBestStore = aStores[0] || createEmptyStoreResult();
+    oBestStore = aStores[0] || createEmptyStoreResult(aItems, aOffers);
 
     return {
-      hasResult: aStores.length > 0,
+      hasResult: aItems.length > 0,
       bestStore: oBestStore,
       splitPlan: buildSplitPlan(aItems, aOffers, oBestStore, oOptions),
       stores: aStores
@@ -48,7 +48,7 @@ sap.ui.define([], function () {
       var oMatchedItem = findBestMatchedItem(oStore.offers, oItem);
 
       if (!oMatchedItem) {
-        aMissingItems.push(oItem);
+        aMissingItems.push(createMissingItem(oItem, oStore.offers, "diesem Laden"));
         return;
       }
 
@@ -61,6 +61,9 @@ sap.ui.define([], function () {
       storeName: oStore.storeName,
       chain: oStore.chain,
       totalPrice: roundCurrency(fTotalPrice),
+      requestedItemCount: aItems.length,
+      coveredItemCount: aMatchedItems.length,
+      isComplete: aMissingItems.length === 0,
       matchedItems: aMatchedItems,
       missingItems: aMissingItems
     };
@@ -76,12 +79,13 @@ sap.ui.define([], function () {
     var fSavingsComparedToBestStore;
     var fTotalExtraStorePenalty;
     var fEffectiveSavings;
+    var bComparableCoverage;
 
     aItems.forEach(function (oItem) {
       var oMatchedItem = findBestMatchedItem(aOffers, oItem);
 
       if (!oMatchedItem) {
-        aMissingItems.push(oItem);
+        aMissingItems.push(createMissingItem(oItem, aOffers, "den geladenen Märkten"));
         return;
       }
 
@@ -92,18 +96,27 @@ sap.ui.define([], function () {
     fTotalPrice = roundCurrency(fTotalPrice);
     iStoreCount = countStores(aMatchedItems);
     iExtraStoreCount = Math.max(iStoreCount - 1, 0);
-    fSavingsComparedToBestStore = roundCurrency(oBestStore.totalPrice - fTotalPrice);
+    bComparableCoverage = aMatchedItems.length > 0 && haveSameItemCoverage(aMatchedItems, oBestStore.matchedItems || []);
+    fSavingsComparedToBestStore = bComparableCoverage
+      ? roundCurrency(oBestStore.totalPrice - fTotalPrice)
+      : null;
     fTotalExtraStorePenalty = roundCurrency(iExtraStoreCount * fExtraStorePenalty);
-    fEffectiveSavings = roundCurrency(fSavingsComparedToBestStore - fTotalExtraStorePenalty);
+    fEffectiveSavings = bComparableCoverage
+      ? roundCurrency(fSavingsComparedToBestStore - fTotalExtraStorePenalty)
+      : null;
 
     return {
       totalPrice: fTotalPrice,
       savingsComparedToBestStore: fSavingsComparedToBestStore,
       effectiveSavings: fEffectiveSavings,
+      hasComparableCoverage: bComparableCoverage,
+      requestedItemCount: aItems.length,
+      coveredItemCount: aMatchedItems.length,
+      isComplete: aMissingItems.length === 0,
       extraStoreCount: iExtraStoreCount,
       extraStorePenalty: fExtraStorePenalty,
       totalExtraStorePenalty: fTotalExtraStorePenalty,
-      isWorthwhile: fEffectiveSavings > 0,
+      isWorthwhile: bComparableCoverage && fEffectiveSavings > 0,
       storeCount: iStoreCount,
       stores: buildSplitStores(aMatchedItems),
       matchedItems: aMatchedItems,
@@ -245,12 +258,50 @@ sap.ui.define([], function () {
     return Math.round((fValue + Number.EPSILON) * 100) / 100;
   }
 
-  function createEmptyStoreResult() {
+  function createMissingItem(oItem, aOffers, sOfferScope) {
+    var aProductOffers = aOffers.filter(function (oOffer) {
+      return oOffer.productKey === oItem.productKey;
+    });
+    var aPackageFormats = Array.from(new Set(aProductOffers.map(function (oOffer) {
+      return oOffer.packageQuantity + " " + oOffer.packageUnit;
+    })));
+    var bIncompatibleUnit = aProductOffers.length > 0;
+
+    return Object.assign({}, oItem, {
+      coverageReason: bIncompatibleUnit ? "incompatible-unit" : "no-offer",
+      coverageMessage: bIncompatibleUnit
+        ? "Angebote in " + sOfferScope + " nur in " + aPackageFormats.join(", ") + "; Einkaufsliste nutzt " +
+          oItem.quantity + " " + oItem.unit + ". Keine automatische Umrechnung."
+        : "Kein passendes aktuelles Angebot in " + sOfferScope + "."
+    });
+  }
+
+  function haveSameItemCoverage(aLeftItems, aRightItems) {
+    var aLeftIds = aLeftItems.map(function (oItem) {
+      return oItem.itemId;
+    }).sort();
+    var aRightIds = aRightItems.map(function (oItem) {
+      return oItem.itemId;
+    }).sort();
+
+    return aLeftIds.length === aRightIds.length && aLeftIds.every(function (vItemId, iIndex) {
+      return vItemId === aRightIds[iIndex];
+    });
+  }
+
+  function createEmptyStoreResult(aItems, aOffers) {
+    var aMissingItems = aItems.map(function (oItem) {
+      return createMissingItem(oItem, aOffers, "den geladenen Märkten");
+    });
+
     return {
       storeName: "",
       totalPrice: 0,
+      requestedItemCount: aItems.length,
+      coveredItemCount: 0,
+      isComplete: false,
       matchedItems: [],
-      missingItems: []
+      missingItems: aMissingItems
     };
   }
 
