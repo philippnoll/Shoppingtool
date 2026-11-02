@@ -652,20 +652,16 @@ async function extractPdf(oConfig, oPaths, sIdentifier, oPdf) {
   const sMetadataPath = path.join(sOutputDirectory, sIdentifier + ".metadata.json");
   const oMetadata = oConfig.force ? null : await readJsonIfPresent(sMetadataPath);
 
-  if (oMetadata && oMetadata.pdfSha256 === oPdf.sha256 &&
-      await isNonEmptyFile(sTextPath) && await isNonEmptyFile(sBboxPath)) {
+  if (oMetadata && oMetadata.pdfSha256 === oPdf.sha256) {
     try {
-      const sBbox = await fs.readFile(sBboxPath, "utf8");
-      const aPages = LidlPdfLayoutParser.parseLayout(sBbox);
+      await validateExtraction(sTextPath, sBboxPath);
 
-      if (aPages.length) {
-        return {
-          textPath: sTextPath,
-          bboxPath: sBboxPath,
-          extractedAt: oMetadata.extractedAt,
-          reused: true
-        };
-      }
+      return {
+        textPath: sTextPath,
+        bboxPath: sBboxPath,
+        extractedAt: oMetadata.extractedAt,
+        reused: true
+      };
     } catch {
       // Corrupt cached extraction is replaced below from the preserved PDF.
     }
@@ -689,11 +685,14 @@ async function extractPdf(oConfig, oPaths, sIdentifier, oPdf) {
     );
   }
 
-  if (!await isNonEmptyFile(sTextPath) || !await isNonEmptyFile(sBboxPath)) {
+  try {
+    await validateExtraction(sTextPath, sBboxPath);
+  } catch (oError) {
     throw new LidlPipelineError(
       "PDF extraction",
       "extraction-failed",
-      "pdftotext completed without non-empty layout and bbox outputs for " + oPdf.path
+      "pdftotext produced unusable layout or bbox output for " + oPdf.path + ": " + oError.message,
+      oError
     );
   }
 
@@ -721,6 +720,16 @@ async function defaultExtractPdf(oInput) {
   await execFile("pdftotext", ["-bbox-layout", oInput.pdfPath, oInput.bboxPath], { timeout: 120000 });
 }
 
+async function validateExtraction(sTextPath, sBboxPath) {
+  const sText = await fs.readFile(sTextPath, "utf8");
+
+  if (!sText.trim()) {
+    throw new Error("layout output contains no extracted text");
+  }
+
+  await parseLayout(sBboxPath);
+}
+
 async function parseLayout(sBboxPath) {
   let sXhtml;
 
@@ -730,6 +739,16 @@ async function parseLayout(sBboxPath) {
 
     if (!aPages.length) {
       throw new Error("no PDF pages were found");
+    }
+
+    if (!aPages.some(function (oPage) {
+      return oPage.blocks.some(function (oBlock) {
+        return oBlock.words.some(function (oWord) {
+          return oWord.text.trim().length > 0;
+        });
+      });
+    })) {
+      throw new Error("bbox output contains no extracted words");
     }
 
     return aPages;
@@ -1016,14 +1035,6 @@ async function readBufferIfPresent(sFilePath) {
     }
 
     throw oError;
-  }
-}
-
-async function isNonEmptyFile(sFilePath) {
-  try {
-    return (await fs.stat(sFilePath)).size > 0;
-  } catch {
-    return false;
   }
 }
 

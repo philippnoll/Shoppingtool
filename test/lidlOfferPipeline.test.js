@@ -288,6 +288,98 @@ test("retries extraction after a forced attempt leaves parseable partial outputs
   assert.equal(oResult.qualityReport.promotionCount, 1);
 });
 
+test("rejects unusable fresh, forced and cached extractions while preserving offers", async function (oTestContext) {
+  for (const sMode of ["fresh", "forced", "cached"]) {
+    for (const sCase of ["layout", "bbox", "both", "blank words", "malformed bbox"]) {
+      await oTestContext.test(sMode + ": " + sCase, async function (oCaseContext) {
+        const sRoot = await createTestRoot(oCaseContext);
+        const sMetadataPath = path.join(
+          sRoot, "data", "raw", "offers", "lidl", "pdf-text", FLYER_IDENTIFIER + ".metadata.json"
+        );
+        let aOutputPaths = [];
+
+        if (sMode !== "fresh") {
+          const oInitial = await LidlOfferPipeline.run(createOptions(sRoot), {
+            now: fixedNow,
+            fetch: createSuccessfulFetch([]),
+            extractPdf: copyExtractionFixture
+          });
+
+          aOutputPaths = Object.values(oInitial.paths);
+
+          if (sMode === "cached") {
+            const oMetadata = await readJson(sMetadataPath);
+
+            await writeUnusableExtraction({
+              textPath: path.join(sRoot, oMetadata.layoutTextFile),
+              bboxPath: path.join(sRoot, oMetadata.positionedTextFile)
+            }, sCase);
+          }
+        }
+
+        const aOriginalOutputs = await Promise.all(aOutputPaths.map(function (sPath) {
+          return fs.readFile(sPath, "utf8");
+        }));
+        let iExtractions = 0;
+
+        await assert.rejects(function () {
+          return LidlOfferPipeline.run(Object.assign(createOptions(sRoot), {
+            force: sMode === "forced"
+          }), {
+            now: fixedNow,
+            fetch: createSuccessfulFetch([]),
+            extractPdf: async function (oInput) {
+              iExtractions += 1;
+              await writeUnusableExtraction(oInput, sCase);
+            }
+          });
+        }, { step: "PDF extraction", code: "extraction-failed" });
+        assert.equal(iExtractions, 1);
+        await assert.rejects(fs.access(sMetadataPath), { code: "ENOENT" });
+        assert.deepEqual(await Promise.all(aOutputPaths.map(function (sPath) {
+          return fs.readFile(sPath, "utf8");
+        })), aOriginalOutputs);
+
+        const oRecovered = await LidlOfferPipeline.run(createOptions(sRoot), {
+          now: fixedNow,
+          fetch: async function () {
+            throw new Error("recovery should reuse the preserved source and PDF");
+          },
+          extractPdf: async function (oInput) {
+            iExtractions += 1;
+            await copyExtractionFixture(oInput);
+          }
+        });
+
+        assert.equal(iExtractions, 2);
+        assert.equal(oRecovered.qualityReport.artifactReuse.extraction, false);
+        assert.equal(oRecovered.qualityReport.promotionCount, 1);
+      });
+    }
+  }
+});
+
+test("allows blank PDF pages alongside extracted words", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oDependencies = {
+    now: fixedNow,
+    fetch: createSuccessfulFetch([]),
+    extractPdf: async function (oInput) {
+      await copyExtractionFixture(oInput);
+      const sBbox = await fs.readFile(oInput.bboxPath, "utf8");
+
+      await fs.writeFile(oInput.bboxPath, sBbox.replace("<doc>", "<doc><page width=\"100\" height=\"100\"/>"));
+    }
+  };
+
+  await LidlOfferPipeline.run(createOptions(sRoot), oDependencies);
+  const oResult = await LidlOfferPipeline.run(createOptions(sRoot), oDependencies);
+
+  assert.equal(oResult.qualityReport.pagesProcessed, 2);
+  assert.equal(oResult.qualityReport.promotionCount, 1);
+  assert.equal(oResult.qualityReport.artifactReuse.extraction, true);
+});
+
 test("rejects discovery pages that contain only expired flyers", function () {
   assert.throws(function () {
     LidlOfferPipeline.selectFlyerSource(createDiscoveryHtml(), "text/html", "2026-07-26");
@@ -687,6 +779,22 @@ async function copyExtractionFixture(oInput) {
     path.join(__dirname, "fixtures", "lidl-page-bbox-sample.html"),
     oInput.bboxPath
   );
+}
+
+async function writeUnusableExtraction(oInput, sCase) {
+  await copyExtractionFixture(oInput);
+
+  if (sCase === "layout" || sCase === "both") {
+    await fs.writeFile(oInput.textPath, " \n\t\f\f\n");
+  }
+
+  if (sCase !== "layout") {
+    const sContent = sCase === "blank words" ? "<flow><block><line><word> </word></line></block></flow>" : "";
+    const sBbox = sCase === "malformed bbox" ? "not XHTML" :
+      "<html><body><doc><page width=\"100\" height=\"100\">" + sContent + "</page></doc></body></html>";
+
+    await fs.writeFile(oInput.bboxPath, sBbox);
+  }
 }
 
 function response(sBody, iStatus, sContentType, sStatusText) {

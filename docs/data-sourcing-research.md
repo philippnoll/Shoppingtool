@@ -495,7 +495,11 @@ sowie ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
 bleiben als inhaltsadressierte Rohdaten erhalten, werden aber nicht als
 aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
 und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
-PDF-Hash passt und das Positionsdokument weiterhin lesbar ist.
+PDF-Hash passt, der Layout-Text mehr als Leerraum enthaelt und das lesbare
+Positionsdokument mindestens ein nichtleeres Wort enthaelt. Dieselbe
+Inhaltspruefung erfolgt vor der Cache-Freigabe neuer Extraktionen. Bild-PDFs
+ohne Textebene brechen damit als Extraktionsfehler ab, bevor vorhandene
+Angebotsausgaben ersetzt werden; einzelne leere Seiten bleiben erlaubt.
 Flyer-Quelle und PDF haben keine eigene zeitliche Ablaufgrenze. Aenderungen
 beim Anbieter unter unveraenderter URL werden bei Wiederverwendung nicht
 abgerufen; dafuer dient `--force`. Bei direktem Flyer-JSON als Discovery-Quelle
