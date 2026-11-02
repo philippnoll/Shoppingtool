@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
 const test = require("node:test");
+const { URL: URLCtor } = require("node:url");
 const { publish } = require("../scripts/publish-offers");
 const Parser = require("../scripts/lib/LidlOfferCandidateParser");
 const Promoter = require("../scripts/lib/LidlOfferPromoter");
@@ -46,7 +47,7 @@ test("publishes parsed historical offers, loads fixed HTTP resources, and preser
     fetch: function (sUrl, oInit) {
       assert.ok(["data/stores.json", "data/offers/optimizer-ready.json"].includes(sUrl));
       assert.equal(oInit.cache, "no-store");
-      return fetch(new URL(sUrl, sOrigin), oInit);
+      return fetch(new URLCtor(sUrl, sOrigin), oInit);
     }
   };
   const aStates = [];
@@ -73,7 +74,7 @@ test("publishes parsed historical offers, loads fixed HTTP resources, and preser
   const oPublication = publish(sInput, sRoot);
   assert.deepEqual(fs.readdirSync(path.join(sRoot, "webapp/data/offers")), ["optimizer-ready.json"]);
   const sPublished = path.join(sRoot, "webapp/data/offers/optimizer-ready.json");
-  const oApiResponse = await (await fetch(new URL("data/offers/optimizer-ready.json", sOrigin))).json();
+  const oApiResponse = await (await fetch(new URLCtor("data/offers/optimizer-ready.json", sOrigin))).json();
   assert.deepEqual(oApiResponse, oDocuments.optimizer);
   assert.doesNotMatch(JSON.stringify(oApiResponse), new RegExp(sRoot));
   await refresh("Publish parsed historical snapshot and retry");

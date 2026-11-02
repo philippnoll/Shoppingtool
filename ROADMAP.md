@@ -448,15 +448,22 @@ Regalpreis-Warenkorb bezeichnet. Ersparnisse zwischen Einzelladen und Split
 werden nur bei identischer Artikelabdeckung verglichen. Die Zusatzladen-Strafe
 bleibt bei 7 EUR.
 
-Verifiziert: 42 Node-Tests fuer Gueltigkeitsgrenzen, falsche Maerkte,
+Verifiziert: 55 Node-Tests fuer Gueltigkeitsgrenzen, falsche Maerkte,
 ungueltige Preise/Mengen/Einheiten, bedingte Preise, leere Snapshots,
 Anfragefehler und Retry, inkompatible Einheiten, Teilabdeckung und bestehendes
 Listen-/Optimizer-Verhalten; Lint und UI5-Produktionsbuild erfolgreich. Der
-Browser-Smoke-Test konnte nicht abgeschlossen werden: `chrome-devtools-axi`
-lieferte null offene Seiten und einen fehlenden `pageId`; Firstmate reproduzierte
-das auch auf `about:blank`. Es wird kein Browser-Pass behauptet. Ein Live-
-Preisresultat erfordert weiterhin einen neu verarbeiteten und publizierten
-Prospekt; das Test-Fixture ist sichtbar als Testdaten markiert.
+Browser-Smoke-Test wurde am 02.11.2026 mit dem isolierten Chrome/AXI-Setup und
+dem sichtbar markierten UI-Fixture abgeschlossen (kein Live-Preisresultat):
+Laden, Freitexterkennung mit vier Eintraegen, editierbare Mengen/Einheiten,
+TESTDATEN-Warnung, 1/4 Einzelladen- und 2/4 Split-Abdeckung, Teilsummen,
+250-g-Angebot gegen 1 Stk sowie der Verzicht auf ungleiche Ersparnisvergleiche
+waren sichtbar. Aktualisieren blendete das alte Optimierungsergebnis sofort aus
+und lud das gekennzeichnete Fixture erneut. Der Browser deckte ausserdem einen
+Syntaxfehler in beiden Coverage-Textbindungen auf; dieser wurde durch den
+Pipeline-Fix und Regressionstests behoben. Im anschliessenden Lauf gab es keine
+Binding-Syntaxfehler; zwei MessageToast-Dock-Diagnosen erschienen nach der
+Erkennung, waehrend die UI weiterlief. Ein aktuelles Live-Preisresultat
+erfordert weiterhin einen neu verarbeiteten und publizierten Prospekt.
 
 Ablauf und Grenzen sind in `README.md` sowie
 `docs/data-sourcing-research.md#ui5-angebotssnapshots-ohne-backend` dokumentiert.
