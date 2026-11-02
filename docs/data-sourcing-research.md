@@ -706,8 +706,12 @@ Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
 
 Die K+K-Quellenpruefung vom 02.11.2026 ist in
 [`docs/kk-offers-research.md`](kk-offers-research.md) dokumentiert. Die
-Retailer-Seite benennt einen aktuellen Prospekt der KW 45, aber die
-Viewer-Katalogdaten liefern 404; die zugaenglichen Wochenangebotsbilder
-enthalten keine exakten Gueltigkeitsdaten. Ein K+K-Adapter ist deshalb nicht
-implementiert und aus dieser Quelle duerfen noch keine Angebote promotet
-werden. Die Epe-Filialzuordnung der zwei internen IDs ist ebenfalls offen.
+Retailer-Seite benennt einen aktuellen Prospekt der KW 45. Nur direkt
+abgefragte, aus der oeffentlichen Viewer-Konfiguration abgeleitete Pfade
+lieferten 404; der normale Viewer-Ablauf wurde mangels funktionierendem
+`chrome-devtools-axi`-Browser nicht verifiziert. Die zugaenglichen
+Wochenangebotsbilder enthalten keine exakten Gueltigkeitsdaten. Die geprueften
+lokalen MeinProspekt- und KaufDA-Seiten liefern keine K+K-Angebote. Ein
+Adapter ist deshalb nicht implementiert; siehe Follow-up in
+[`docs/kk-offers-research.md`](kk-offers-research.md). Die Epe-Filialzuordnung
+der zwei internen IDs bleibt eine separate Captain-Entscheidung.

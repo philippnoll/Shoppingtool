@@ -473,14 +473,17 @@ Akzeptanzkriterien je Haendler:
 - Reale Stichproben sind getestet.
 - Ausgabe kann ohne Sonderfall im `ShoppingOptimizer` verwendet werden.
 
-K+K-Discovery am 02.11.2026: Die offizielle Seite verlinkt den aktuellen
-KW-45-Blaetterkatalog, dessen erwartete Katalogdaten derzeit 404 liefern.
-Zugaengliche Angebotsbilder belegen Produkt- und Preisbeispiele, nennen aber
-keine exakten Gueltigkeitsdaten; mindestens ein reales Beispiel hat zudem eine
-Packungsgroessenspanne. Der Adapter ist daher blockiert und nicht umgesetzt.
-Der offizielle Filialfinder zeigt drei Epe-Filialen mit demselben KW-45-Link,
-waehrend `data/stores.json` zwei Epe-IDs ohne Strassenadresse fuehrt. Details,
-Quell-URLs und Bedingungen zur sicheren Wiederaufnahme: [K+K Offer Source
+K+K-Discovery am 02.11.2026: Die offizielle Seite verlinkt einen
+Blaetterkatalog fuer KW 45. Direkt abgefragte, aus der Viewer-Konfiguration
+abgeleitete Pfade liefern 404; der normale Viewer-Ablauf ist mangels
+funktionierendem `chrome-devtools-axi`-Browser nicht verifiziert. Zugaengliche
+Angebotsbilder nennen keine exakten Gueltigkeitsdaten; ein Beispiel hat
+zudem eine Packungsgroessenspanne. Die geprueften lokalen MeinProspekt- und KaufDA-Seiten enthalten keine
+K+K-Angebote. Der Adapter bleibt unimplementiert, bis eine legitime Quelle
+mit belastbaren Angebotsfeldern und Gueltigkeit gefunden wird. Der offizielle
+Filialfinder zeigt drei Epe-Filialen mit demselben KW-45-Link, waehrend
+`data/stores.json` zwei Epe-IDs ohne Strassenadresse fuehrt; die Zuordnung ist
+eine separate Captain-Entscheidung. Details und Quell-URLs: [K+K Offer Source
 Research](docs/kk-offers-research.md). Keine Kalenderwochen-Daten, Filialen
 oder Packungsmengen erraten und keine Angebote aus diesem Stand promoten.
 
