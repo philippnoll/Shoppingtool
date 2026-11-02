@@ -206,7 +206,7 @@
                   text="Angebotssumme nur für die abgedeckten Artikel; kein vollständiger Regalpreis-Warenkorb."
                   class="mutedText sapUiTinyMarginBottom" />
                 <ObjectStatus
-                  text="{= ${/optimizationResult/bestStore/coveredItemCount} + ' von ' + ${/optimizationResult/bestStore/requestedItemCount} Listenartikeln abgedeckt' }"
+                  text="{= ${/optimizationResult/bestStore/coveredItemCount} + ' von ' + ${/optimizationResult/bestStore/requestedItemCount} + ' Listenartikeln abgedeckt' }"
                   state="{= ${/optimizationResult/bestStore/isComplete} ? 'Success' : 'Warning' }"
                   class="sapUiSmallMarginBottom" />
                 <List
@@ -243,7 +243,7 @@
                   text="Angebotssumme nur für die abgedeckten Artikel; kein vollständiger Regalpreis-Warenkorb."
                   class="mutedText sapUiTinyMarginBottom" />
                 <ObjectStatus
-                  text="{= ${/optimizationResult/splitPlan/coveredItemCount} + ' von ' + ${/optimizationResult/splitPlan/requestedItemCount} Listenartikeln abgedeckt' }"
+                  text="{= ${/optimizationResult/splitPlan/coveredItemCount} + ' von ' + ${/optimizationResult/splitPlan/requestedItemCount} + ' Listenartikeln abgedeckt' }"
                   state="{= ${/optimizationResult/splitPlan/isComplete} ? 'Success' : 'Warning' }"
                   class="sapUiTinyMarginBottom" />
                 <ObjectStatus
