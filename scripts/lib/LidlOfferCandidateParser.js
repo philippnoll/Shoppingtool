@@ -7,7 +7,7 @@ const BASE_PRICE_PATTERN = /\b1\s*(kg|l)\s*=\s*(\d+(?:[.,]\d+)?)/i;
 const WEIGHT_UNIT_PRICE_PATTERN = /\bkg-Preis\s*=\s*(\d+(?:[.,]\d+)?)/i;
 
 function parsePage(oPage, oContext) {
-  const oSourceContext = oContext || {};
+  const oSourceContext = pageValidityContext(oPage, oContext || {});
   const aBlocks = oPage.blocks || [];
   const aPriceBlocks = extractCurrentPriceBlocks(aBlocks);
   const oUsedPriceBlocks = new Set();
@@ -31,6 +31,45 @@ function parsePage(oPage, oContext) {
   });
 
   return mergeConditionalPrices(aOffers).sort(compareOfferPosition);
+}
+
+function pageValidityContext(oPage, oContext) {
+  const sHeader = normalizeText((oPage.blocks || [])
+    .filter(function (oBlock) {
+      return oBlock.yMax <= (oPage.height ? oPage.height * 0.1 : 80);
+    })
+    .map(function (oBlock) {
+      return oBlock.text;
+    }).join(" "));
+  const oMatch = sHeader.match(/\bAb\s+(?:(?:Mo|Di|Mi|Do|Fr|Sa|So)\.\s*)?(\d{1,2})\.\s*(\d{1,2})\.(?:\s+bis\s+(?:(?:Mo|Di|Mi|Do|Fr|Sa|So)\.\s*)?(\d{1,2})\.\s*(\d{1,2})\.)?/i);
+
+  if (!oMatch) {
+    return oContext;
+  }
+
+  return Object.assign({}, oContext, {
+    validFrom: dateWithinFlyer(oMatch[1], oMatch[2], oContext),
+    validTo: oMatch[3] ? dateWithinFlyer(oMatch[3], oMatch[4], oContext) : oContext.validTo
+  });
+}
+
+function dateWithinFlyer(sDay, sMonth, oContext) {
+  // Resolve the omitted year within the flyer window, including New Year.
+  const aYears = Array.from(new Set([
+    String(oContext.validFrom || "").slice(0, 4),
+    String(oContext.validTo || "").slice(0, 4)
+  ]));
+  const aDates = aYears.map(function (sYear) {
+    return sYear + "-" + sMonth.padStart(2, "0") + "-" + sDay.padStart(2, "0");
+  }).filter(function (sDate) {
+    const oDate = new Date(sDate + "T00:00:00.000Z");
+
+    return Number.isFinite(oDate.getTime()) && oDate.toISOString().slice(0, 10) === sDate &&
+      sDate >= oContext.validFrom && sDate <= oContext.validTo;
+  });
+
+  // Unresolvable header dates must reach review, never regain flyer-wide validity.
+  return aDates.length === 1 ? aDates[0] : null;
 }
 
 function buildFixedPackageOffer(oPage, oDetailBlock, aBlocks, aPriceBlocks, oUsedPriceBlocks, oContext) {

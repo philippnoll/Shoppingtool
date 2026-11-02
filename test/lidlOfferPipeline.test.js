@@ -74,6 +74,70 @@ test("orchestrates discovery through promotion and quality reporting", async fun
   assert.equal((await readJson(oResult.paths.qualityReport)).candidateCount, 1);
 });
 
+test("keeps page-specific future offers out of optimizer-ready output", async function (oTestContext) {
+  const sRoot = await createTestRoot(oTestContext);
+  const oSource = createFlyerSource();
+
+  oSource.flyer.title = "02.11.2026 – 07.11.2026";
+  oSource.flyer.startDate = "2026-11-02";
+  oSource.flyer.endDate = "2026-11-07";
+  oSource.flyer.offerStartDate = "2026-11-02";
+  oSource.flyer.offerEndDate = "2026-11-07";
+
+  const oResult = await LidlOfferPipeline.run(Object.assign(createOptions(sRoot), {
+    referenceDate: "2026-11-02"
+  }), {
+    now: function () {
+      return new Date("2026-11-02T12:00:00.000Z");
+    },
+    fetch: async function (sUrl) {
+      return sUrl === DISCOVERY_URL
+        ? response(JSON.stringify(oSource), 200, "application/json")
+        : response("%PDF-1.7 synthetic fixture", 200, "application/pdf");
+    },
+    extractPdf: async function (oInput) {
+      await fs.writeFile(oInput.textPath, "Ab Do. 5.11. bis Sa. 7.11.\nRomatomaten Je 750 g 1.99\n");
+      await fs.copyFile(
+        path.join(__dirname, "fixtures", "lidl-page-60-date-bbox.html"),
+        oInput.bboxPath
+      );
+    }
+  });
+  const oOptimizer = await readJson(oResult.paths.optimizer);
+  const oReview = await readJson(oResult.paths.review);
+
+  assert.equal(oOptimizer.offers.some(function (oOffer) {
+    return oOffer.productKey === "tomaten";
+  }), false, "Romatomaten are only available from November 5, not on November 2");
+
+  const oTomatoEntry = oReview.entries.find(function (oEntry) {
+    return oEntry.candidate.rawName === "Romatomaten";
+  });
+
+  assert.ok(oTomatoEntry, "the dated offer must remain traceable in review");
+  assert.equal(oTomatoEntry.candidate.validFrom, "2026-11-05");
+  assert.equal(oTomatoEntry.candidate.validTo, "2026-11-07");
+  assert.equal(oTomatoEntry.status, "review");
+  assert.ok(oTomatoEntry.reasons.includes("not-yet-valid"));
+
+  const oValidResult = await LidlOfferPipeline.run(Object.assign(createOptions(sRoot), {
+    referenceDate: "2026-11-05"
+  }), {
+    now: function () {
+      return new Date("2026-11-02T12:00:00.000Z");
+    },
+    fetch: async function () {
+      throw new Error("the dated offer should be reparsed from cached artifacts");
+    }
+  });
+  const oValidOptimizer = await readJson(oValidResult.paths.optimizer);
+
+  assert.equal(oValidOptimizer.offerCount, 1);
+  assert.equal(oValidOptimizer.offers[0].productKey, "tomaten");
+  assert.equal(oValidOptimizer.offers[0].validFrom, "2026-11-05");
+  assert.equal(oValidOptimizer.offers[0].validTo, "2026-11-07");
+});
+
 test("safely reuses source, PDF and extraction artifacts on a repeated run", async function (oTestContext) {
   const sRoot = await createTestRoot(oTestContext);
 

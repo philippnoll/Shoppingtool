@@ -278,6 +278,16 @@ Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die f
 
 Die Zuordnung basiert auf Spalten, Abstaenden und Lesereihenfolge. Unsichere Kiloware bekommt eine niedrigere `confidence` als ein vollstaendiger Block aus Produktname, Menge und Preis.
 
+Seitenkoepfe im oberen Zehntel der PDF-Seite wie `Ab Do. 5.11. bis Sa. 7.11.`
+schraenken die Kandidatengueltigkeit vor der Promotion ein. Das fehlende Jahr
+wird aus dem Prospektzeitraum bestimmt, auch ueber den Jahreswechsel. Bei einem
+reinen `Ab`-Datum bleibt das Prospektende erhalten; ohne erkannten Datumskopf
+gilt weiterhin der Prospektzeitraum. Nicht aufloesbare Kopfdaten werden `null`
+und damit vom Promoter ins Review gelegt. So bleiben etwa Romatomaten von
+PDF-Seite 60 des Novemberprospekts am 02.11.2026 mit `not-yet-valid` im Review
+und werden erst ab 05.11. freigegeben. Beide Parser-Einstiege (Einzelaufruf und
+Pipeline) nutzen dieselbe Regel, auch bei wiederverwendeter PDF-Extraktion.
+
 Getestet sind unter anderem zwei echte, unterschiedlich aufgebaute Seiten:
 
 - Seite 3 mit Romatomaten, Multipack, Brot und Wassermelone
