@@ -95,11 +95,16 @@ Outputs stay outside Git:
 
 For artifact identity, provenance, reuse rules and failure handling, see
 [the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
+- Separate promotion/review stage with validity, confidence and Lidl Plus
+  checks.
+- K+K public-source discovery is documented, but the offer adapter is blocked
+  until source validity and package fields can be verified.
 
 ## Documentation
 
 - [Project status and roadmap](ROADMAP.md)
 - [Data sourcing and retailer research](docs/data-sourcing-research.md)
+- [K+K source research and blocker](docs/kk-offers-research.md)
 - [UI5 learning notes](docs/ui5-basics.md)
 
 ## Next Milestone

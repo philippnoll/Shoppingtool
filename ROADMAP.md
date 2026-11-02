@@ -473,6 +473,17 @@ Akzeptanzkriterien je Haendler:
 - Reale Stichproben sind getestet.
 - Ausgabe kann ohne Sonderfall im `ShoppingOptimizer` verwendet werden.
 
+K+K-Discovery am 02.11.2026: Die offizielle Seite verlinkt den aktuellen
+KW-45-Blaetterkatalog, dessen erwartete Katalogdaten derzeit 404 liefern.
+Zugaengliche Angebotsbilder belegen Produkt- und Preisbeispiele, nennen aber
+keine exakten Gueltigkeitsdaten; mindestens ein reales Beispiel hat zudem eine
+Packungsgroessenspanne. Der Adapter ist daher blockiert und nicht umgesetzt.
+Der offizielle Filialfinder zeigt drei Epe-Filialen mit demselben KW-45-Link,
+waehrend `data/stores.json` zwei Epe-IDs ohne Strassenadresse fuehrt. Details,
+Quell-URLs und Bedingungen zur sicheren Wiederaufnahme: [K+K Offer Source
+Research](docs/kk-offers-research.md). Keine Kalenderwochen-Daten, Filialen
+oder Packungsmengen erraten und keine Angebote aus diesem Stand promoten.
+
 ### Phase 6: Persistenz, Historie Und NAS-Backend
 
 Ziel: Angebots-Snapshots, Preisverlaeufe und gemeinsame Einkaufslisten

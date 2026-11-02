@@ -702,3 +702,12 @@ Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
 HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
 Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
 Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
+## K+K Discovery
+
+Die K+K-Quellenpruefung vom 02.11.2026 ist in
+[`docs/kk-offers-research.md`](kk-offers-research.md) dokumentiert. Die
+Retailer-Seite benennt einen aktuellen Prospekt der KW 45, aber die
+Viewer-Katalogdaten liefern 404; die zugaenglichen Wochenangebotsbilder
+enthalten keine exakten Gueltigkeitsdaten. Ein K+K-Adapter ist deshalb nicht
+implementiert und aus dieser Quelle duerfen noch keine Angebote promotet
+werden. Die Epe-Filialzuordnung der zwei internen IDs ist ebenfalls offen.
