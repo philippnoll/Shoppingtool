@@ -1,6 +1,6 @@
 # Shoppingtool: Projektstand Und Roadmap
 
-Stand: 2026-07-27
+Stand: 2026-11-02
 
 Dieses Dokument ist die zentrale Uebergabe fuer Menschen und Coding Agents. Es
 beschreibt, welches Produkt gebaut wird, was bereits funktioniert, welche
@@ -114,8 +114,8 @@ Die erste reale Kohorte ist in `data/stores.json` erfasst:
 - K+K Epe Ost
 - PENNY Epe
 
-Lidl ist die erste implementierte Datenquelle. Die anderen Ketten folgen erst,
-wenn die Lidl-Pipeline verlaesslich genug ist.
+Der Umsetzungsstand der weiteren Haendler steht in Phase 5; Details zu Quellen
+und lokaler Anwendbarkeit stehen in `docs/data-sourcing-research.md`.
 
 ### 6. Lidl-Datenbeschaffung
 
@@ -183,12 +183,12 @@ Cantaloupemelone und Rinder-Rumpsteak.
 
 ### 7. Qualitaetssicherung Und Dokumentation
 
-- Node-Test-Suite fuer Produkterkennung, Optimierung und Lidl-Pipeline.
+- Node-Test-Suite fuer Produkterkennung, Optimierung und Haendleradapter.
 - ESLint fuer `webapp`, `scripts` und `test`.
 - UI5-Produktionsbuild.
 - `docs/ui5-basics.md` dokumentiert die bisher besprochenen UI5-Grundlagen.
 - `docs/data-sourcing-research.md` dokumentiert Quellen, Befunde und die
-  Lidl-Pipeline im Detail.
+  Haendleradapter im Detail.
 - Die End-to-End-Orchestrierung wird mit lokalen Fixtures und injiziertem
   Netzwerk getestet; die normale Test-Suite haengt nicht von Lidl ab.
 - Zuletzt waren `npm test`, `npm run lint` und `npm run build` erfolgreich.
@@ -441,15 +441,19 @@ Akzeptanzkriterien:
 
 ### Phase 5: Weitere Haendler Der Ersten Kohorte
 
+Status: ALDI Nord-Adapter umgesetzt; K+K und PENNY stehen noch aus.
+
 Reihenfolge:
 
-1. ALDI Nord
+1. ALDI Nord — umgesetzt; Quellenumfang und lokale Zuordnung siehe
+   [Quellenreferenz](docs/data-sourcing-research.md#quelle-und-regionalitaet).
 2. K+K
 3. PENNY
 
 Fuer jede Kette zuerst einen Discovery-Spike durchfuehren. Nicht annehmen,
 dass PDF, JSON-Endpunkte oder regionale Gueltigkeit wie bei Lidl aufgebaut
-sind.
+sind. Der Einstieg zum ALDI-Nord-Abruf steht in `README.md`; die technischen
+Details stehen in `docs/data-sourcing-research.md`.
 
 Jeder Adapter soll am Ende denselben internen Angebotsvertrag liefern:
 

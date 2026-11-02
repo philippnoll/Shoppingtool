@@ -151,7 +151,7 @@ npm run build
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
 - For running the Lidl pipeline, see [the README](README.md#lidl-offer-pipeline).
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
-- Treat `ROADMAP.md` as the authoritative ordered handoff for future work.
+- Treat `ROADMAP.md` as the authoritative ordered handoff for future work, including retailer progress in Phase 5. Source limitations and adapter operations belong in `docs/data-sourcing-research.md`.
 
 ## Maintaining this file
 
