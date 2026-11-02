@@ -396,7 +396,7 @@ function parseSalesUnit(sSalesUnit) {
 
   const sUnit = sSalesUnit.trim();
   const oMeasuredPack = sUnit.match(
-    /^(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+|(?:\.\d{3})+)?)\s*[- ]?\s*(kg|g|ml|l)\b/i
+    /^(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+|(?:\.\d{3})+)?)\s*[- ]?\s*(kg|g|ml|l)(?:\s*[- ]\s*(?:pack(?:ung)?|beutel|schale|dose|flasche|becher|glas|netz))?$/i
   );
 
   if (oMeasuredPack) {
@@ -535,7 +535,10 @@ function hasConditionalPrice(aLabels, oProduct) {
   }).concat(sSourceText);
 
   return aTexts.some(function (sText) {
-    return /gratis|\bkaufen\b|\bapp\b|coupon|gutschein|nur\s+mit|kundenkarte|kundenkonto/i.test(sText);
+    return /gratis|\bkaufen\b|\bapp\b|coupon|gutschein|nur\s+mit|kundenkarte|kundenkonto/i.test(sText) ||
+      /\b(?:mindestabnahme|mindestmenge|mehrkauf|mengenrabatt)\b|\b(?:kauf|abnahme)\s+(?:von\s+)?(?:mindestens\s+)?\d+/i.test(sText) ||
+      /\bab\s+\d+\s*[- ]?\s*(?:stück|stueck|stk|packungen?|packs?|flaschen?|dosen?|bechern?|beuteln?|gläsern?|glaesern?|artikeln?|produkten?|kg|g|ml|l)\b/i.test(sText) ||
+      /\b\d+\s*(?:für|fuer|zum\s+preis\s+von)\s+\d+|\b\d+\s*\+\s*\d+\b/i.test(sText);
   });
 }
 

@@ -204,6 +204,80 @@ test("does not promote a prepared rice dish as plain rice despite a shared match
   }), false);
 });
 
+test("rejects ambiguous sales units throughout candidate creation and promotion", function () {
+  [
+    "250-g-Packung/500-g-Packung",
+    "250-g-Packung oder 500-g-Packung",
+    "250 g + 50 g",
+    "250-g-Packung (125 g Abtropfgewicht)",
+    "6x0,33-L-Dose/0,5-L-Flasche",
+    "250-g-unbekannt"
+  ].forEach(function (sSalesUnit) {
+    const oChangedFixture = JSON.parse(JSON.stringify(oFixture));
+    oChangedFixture.products = [Object.assign({}, oChangedFixture.products[0], {
+      salesUnit: sSalesUnit
+    })];
+    const oDocuments = createDocuments(oChangedFixture);
+    const oCandidate = oDocuments.candidates.candidates[0];
+    const oEntry = oDocuments.review.entries[0];
+
+    assert.equal(oCandidate.salesUnit, sSalesUnit);
+    assert.equal(oCandidate.rawOffer.salesUnit, sSalesUnit);
+    assert.equal(oCandidate.packageQuantity, null, sSalesUnit);
+    assert.equal(oCandidate.packageParseType, "unsupported");
+    assert.equal(oCandidate.parserConfidence, 0.5);
+    assert.ok(oEntry.reasons.includes("missing-package-quantity"));
+    assert.ok(oEntry.reasons.includes("unsupported-package-unit"));
+    assert.ok(oEntry.reasons.includes("low-parser-confidence"));
+    assert.equal(oDocuments.optimizer.offerCount, 0, sSalesUnit);
+    assert.equal(oDocuments.optimizer.localApplicability.scope, "aldi-nord-chain");
+    assert.equal(oDocuments.optimizer.localApplicability.storeLevelStockKnown, false);
+  });
+});
+
+test("excludes minimum-purchase and multi-buy conditions from all price text sources", function () {
+  [
+    "ab 2 Stück",
+    "beim Kauf von 2 Packungen",
+    "Ab 3 Packungen",
+    "ab 2 Stk.",
+    "ab 6 Flaschen",
+    "bei Abnahme von mindestens 2 Bechern",
+    "Mindestabnahme: 2 Packungen",
+    "Mengenrabatt",
+    "2 für 3,00 €",
+    "2 zum Preis von 1",
+    "2+1"
+  ].forEach(function (sCondition) {
+    ["currentPrice", "promotionPrice", "shortDescription", "longDescription"].forEach(function (sField) {
+      const oChangedFixture = JSON.parse(JSON.stringify(oFixture));
+      const oProduct = oChangedFixture.products[0];
+      oChangedFixture.products = [oProduct];
+
+      if (sField === "currentPrice" || sField === "promotionPrice") {
+        const oPrice = sField === "currentPrice" ? oProduct.currentPrice : oProduct.promotionPrices[0];
+        oPrice.priceTagLabels = { additionalPromoTileText1: sCondition };
+      } else {
+        oProduct[sField] = sCondition;
+      }
+
+      const oDocuments = createDocuments(oChangedFixture);
+      const oEntry = oDocuments.review.entries[0];
+      const sContext = sField + ": " + sCondition;
+
+      assert.equal(oDocuments.candidates.candidates[0].conditionalPrice, true, sContext);
+      assert.deepEqual(oEntry.reasons, ["conditional-price"], sContext);
+      assert.equal(oEntry.priceCondition.type, "conditional-promotion");
+      assert.equal(oEntry.priceCondition.required, true);
+      assert.equal(oDocuments.optimizer.offerCount, 0, sContext);
+    });
+  });
+
+  ["Preis-Highlight", "-20 %", "ab 02.11.2026", "ab Donnerstag", "250-g-Packung"].forEach(function (sText) {
+    assert.equal(AldiNordOfferAdapter.hasConditionalPrice([{ text: sText }], {}), false, sText);
+  });
+});
+
 test("deduplicates exact source rows without multiplying optimizer offers", function () {
   const oCandidates = AldiNordOfferAdapter.createCandidates(
     AldiNordOfferAdapter.parsePage(createPageHtml(oFixture)),
@@ -302,6 +376,20 @@ test("parses common ALDI sales-unit forms without inventing missing quantities",
   });
   assert.equal(AldiNordOfferAdapter.parseSalesUnit("kg-Preis").quantity, null);
   assert.equal(AldiNordOfferAdapter.parseSalesUnit("Stück/2er-Packung").quantity, null);
+  [
+    ["250 g", 250, "g", 1],
+    ["650-g-Schale", 650, "g", 1],
+    ["1-L-Packung", 1, "l", 1],
+    ["800-g-Dose", 800, "g", 1],
+    ["500 ml Flasche", 500, "ml", 1],
+    ["2 × 125-g-Becher", 250, "g", 2],
+    [" 1-kg-Netz ", 1, "kg", 1]
+  ].forEach(function (aPack) {
+    const oPack = AldiNordOfferAdapter.parseSalesUnit(aPack[0]);
+    assert.equal(oPack.quantity, aPack[1], aPack[0]);
+    assert.equal(oPack.unit, aPack[2], aPack[0]);
+    assert.equal(oPack.count, aPack[3], aPack[0]);
+  });
 });
 
 test("fixture provenance points at a genuine public source sample", function () {

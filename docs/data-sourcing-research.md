@@ -628,8 +628,9 @@ lokalen Angebotsdaten `validFromLocalDate` und `validUntilLocalDate` stammen
 ausschliesslich aus `promotionPrices`; es wird kein Datum aus der Abrufzeit
 oder Kategorie erfunden. Die Preislabels werden unveraendert im Rohkandidaten
 behalten. Preislabels und offizielle Kurz-/Langtexte werden auf Hinweise wie
-`4 kaufen +1 gratis` geprueft; diese fuehren zu `conditional-price` und werden
-nicht als normaler Einzelpreis ausgegeben.
+`4 kaufen +1 gratis`, Mindestabnahmen (`ab 2 Stueck`, `beim Kauf von 2
+Packungen`) und Mehrkaufpreise (`2 fuer 3,00 EUR`) geprueft; diese fuehren zu
+`conditional-price` und werden nicht als normaler Einzelpreis ausgegeben.
 
 `AldiNordOfferAdapter` verwendet den gemeinsamen `ProductMatcher`, prueft
 aber zusaetzlich eine bekannte Fehlzuordnung: `Djuvec-Reis-Gericht` enthaelt
@@ -641,7 +642,11 @@ unterstuetzten eindeutigen Verkaufseinheiten enthalten z.B. `250-g-Packung`,
 `650-g-Schale`, `1-L-Packung`, Multipacks mit expliziter Menge, zaehlbare
 `n-er-Packung` und das eindeutige `Stueck`. `Packung`, `kg-Preis`, `Dose`
 ohne Mengenangabe, `Stueck/2er-Packung` und andere mehrdeutige Einheiten
-werden nicht geraten.
+werden nicht geraten. Der Mengenparser prueft die gesamte Verkaufseinheit;
+nach einer Masseinheit sind nur bekannte Verpackungsnamen (Pack/Packung,
+Beutel, Schale, Dose, Flasche, Becher, Glas, Netz) erlaubt. Alternativen wie
+`250-g-Packung/500-g-Packung` und weitere Mengen-/Textzusaetze bleiben mit
+fehlender Menge und niedriger Parser-Konfidenz im Review.
 
 Reale Stichproben gegen die normalisierte Ausgabe (Abruf 02.11.2026):
 
