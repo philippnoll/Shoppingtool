@@ -1,6 +1,6 @@
 # Shoppingtool: Projektstand Und Roadmap
 
-Stand: 2026-07-27
+Stand: 2026-11-02
 
 Dieses Dokument ist die zentrale Uebergabe fuer Menschen und Coding Agents. Es
 beschreibt, welches Produkt gebaut wird, was bereits funktioniert, welche
@@ -441,15 +441,21 @@ Akzeptanzkriterien:
 
 ### Phase 5: Weitere Haendler Der Ersten Kohorte
 
+Status: ALDI Nord-Adapter umgesetzt; K+K und PENNY stehen noch aus.
+
 Reihenfolge:
 
-1. ALDI Nord
+1. ALDI Nord — offizieller aktueller Offers-Seitenadapter mit Kandidaten,
+   Review und optimizer-ready Ausgabe; lokale Zuordnung erfolgt auf
+   ALDI-Nord-Kettenebene, nicht als Filialbestand.
 2. K+K
 3. PENNY
 
 Fuer jede Kette zuerst einen Discovery-Spike durchfuehren. Nicht annehmen,
 dass PDF, JSON-Endpunkte oder regionale Gueltigkeit wie bei Lidl aufgebaut
-sind.
+sind. Die ALDI-Nord-Quelle und ihre Grenzen sind in
+`docs/data-sourcing-research.md` dokumentiert; der End-to-End-Befehl ist
+`npm run fetch:aldi-nord-offers`.
 
 Jeder Adapter soll am Ende denselben internen Angebotsvertrag liefern:
 

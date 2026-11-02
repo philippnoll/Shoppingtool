@@ -1,0 +1,184 @@
+{
+  "capture": {
+    "sourceUrl": "https://www.aldi-nord.de/angebote.html",
+    "retrievedAt": "2026-11-02T12:09:31.000Z",
+    "description": "Sanitized fields from the public ALDI Nord current-offers page; product records retain source IDs, names, sales units, prices, dates and price labels."
+  },
+  "page": {
+    "name": "angebote",
+    "path": "/germany/angebote",
+    "locale": "de",
+    "request": {
+      "locale": "de",
+      "week": "current"
+    },
+    "campaignWindows": [
+      {
+        "title": "Aktion Mo. 2.11.",
+        "startDate": "2026-11-02",
+        "endDate": "2026-11-07"
+      },
+      {
+        "title": "Aktion Do. 5.11.",
+        "startDate": "2026-11-05",
+        "endDate": "2026-11-07"
+      }
+    ]
+  },
+  "products": [
+    {
+      "objectID": "4704",
+      "productSlug": "butter-4704",
+      "name": "Butter",
+      "salesUnit": "250-g-Packung",
+      "isAvailable": true,
+      "isComingSoon": false,
+      "isRecall": false,
+      "currentPrice": {
+        "priceValue": 1.49,
+        "basePrice": [
+          {
+            "basePriceValue": 5.96,
+            "basePriceScale": "kg"
+          }
+        ],
+        "validFrom": 1793574000,
+        "validUntil": 1794092399
+      },
+      "promotionPrices": [
+        {
+          "priceValue": 1.49,
+          "validFrom": 1793574000,
+          "validUntil": 1794092399,
+          "validFromLocalDate": "2026-11-02",
+          "validUntilLocalDate": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "objectID": "6766",
+      "productSlug": "rispentomaten-6766",
+      "name": "Rispentomaten",
+      "salesUnit": "650-g-Schale",
+      "isAvailable": true,
+      "isComingSoon": false,
+      "isRecall": false,
+      "currentPrice": {
+        "priceValue": 1.69,
+        "strikePrice": {
+          "strikePriceValue": 2.19
+        },
+        "priceTagLabels": {
+          "promoText1": "-22 %",
+          "additionalPromoTileText1": "Preis-Highlight"
+        },
+        "validFrom": 1793833200,
+        "validUntil": 1794092399
+      },
+      "promotionPrices": [
+        {
+          "priceValue": 1.69,
+          "validFrom": 1793833200,
+          "validUntil": 1794092399,
+          "validFromLocalDate": "2026-11-05",
+          "validUntilLocalDate": "2026-11-07",
+          "priceTagLabels": {
+            "promoText1": "-22 %",
+            "additionalPromoTileText1": "Preis-Highlight"
+          }
+        }
+      ]
+    },
+    {
+      "objectID": "1021924",
+      "productSlug": "frische-milch-1021924",
+      "name": "Frische Milch",
+      "salesUnit": "1-L-Packung",
+      "isAvailable": true,
+      "isComingSoon": false,
+      "isRecall": false,
+      "currentPrice": {
+        "priceValue": 0.99,
+        "strikePrice": {
+          "strikePriceValue": 1.49,
+          "strikePriceLabel": "UVP"
+        },
+        "priceTagLabels": {
+          "promoText1": "-33 %"
+        },
+        "validFrom": 1793833200,
+        "validUntil": 1794437999
+      },
+      "promotionPrices": [
+        {
+          "priceValue": 0.99,
+          "validFrom": 1793833200,
+          "validUntil": 1794437999,
+          "validFromLocalDate": "2026-11-05",
+          "validUntilLocalDate": "2026-11-11",
+          "priceTagLabels": {
+            "promoText1": "-33 %"
+          }
+        }
+      ]
+    },
+    {
+      "objectID": "1037558",
+      "productSlug": "weihnachtskarte-1037558",
+      "name": "Weihnachtskarte",
+      "longDescription": "* 4 kaufen + 1 gratis (Motive frei wählbar)\n * Einzelpreis = 0,99",
+      "salesUnit": "Stück/2er-Packung",
+      "isAvailable": true,
+      "isComingSoon": false,
+      "isRecall": false,
+      "currentPrice": {
+        "priceValue": 3.96,
+        "strikePrice": {
+          "strikePriceValue": 4.95
+        },
+        "priceTagLabels": {
+          "promoText1": "-20 %",
+          "additionalPromoTileText1": "4 kaufen +1 gratis"
+        },
+        "validFrom": 1793574000,
+        "validUntil": 1794092399
+      },
+      "promotionPrices": [
+        {
+          "priceValue": 3.96,
+          "validFrom": 1793574000,
+          "validUntil": 1794092399,
+          "validFromLocalDate": "2026-11-02",
+          "validUntilLocalDate": "2026-11-07",
+          "priceTagLabels": {
+            "promoText1": "-20 %",
+            "additionalPromoTileText1": "4 kaufen +1 gratis"
+          }
+        }
+      ]
+    },
+    {
+      "objectID": "1015587",
+      "productSlug": "djuvec-reis-gericht-1015587",
+      "name": "Djuvec-Reis-Gericht",
+      "salesUnit": "800-g-Dose",
+      "isAvailable": true,
+      "isComingSoon": false,
+      "isRecall": false,
+      "currentPrice": {
+        "priceValue": 2.49,
+        "validFrom": 1793574000,
+        "validUntil": 1794092399
+      },
+      "promotionPrices": [
+        {
+          "priceValue": 2.49,
+          "validFrom": 1793574000,
+          "validUntil": 1794092399,
+          "validFromLocalDate": "2026-11-02",
+          "validUntilLocalDate": "2026-11-07"
+        }
+      ]
+    }
+  ]
+}

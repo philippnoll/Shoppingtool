@@ -52,6 +52,11 @@ npx ui5 serve --port 8080
 - One end-to-end Lidl command with bounded retries, safe artifact reuse,
   provenance and a quality report.
 
+- ALDI Nord current-offer acquisition, conservative normalization, review and
+  optimizer-ready output for the ALDI Nord Epe store entry.
+- Separate retailer promotion/review stages with validity and conditional-price
+  checks; ALDI Nord chain offers do not claim store-level stock.
+
 ## Lidl Offer Pipeline
 
 `pdftotext` from `poppler-utils` must be installed. Then run:

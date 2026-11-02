@@ -577,3 +577,111 @@ freigegebenen Angebote werden als Warnungen im erfolgreichen Bericht
 gemeldet; `status: "completed"` garantiert somit keine nutzbaren Angebote.
 Die automatisierten Tests verwenden lokale Fixtures und ein
 injiziertes Fake-Netzwerk; `npm test` braucht daher keine Lidl-Verfuegbarkeit.
+
+## ALDI Nord: Discovery Und Adapter
+
+Stand: 2026-11-02
+
+### Quelle Und Regionalitaet
+
+Der legitime direkte Quellenweg ist ein normaler GET der oeffentlichen
+ALDI-Nord-Seite `https://www.aldi-nord.de/angebote.html`. Ein Test der alten
+Route `/angebote/angebote.html` ergab 404; die kanonische Offers-Seite ist
+`/angebote.html`. Ihre Next.js-Seitendaten enthalten eine `apiData`-Eigenschaft
+mit einem `OFFER_GET`-Datensatz. Die beobachtete Anfrage ist
+`{ locale: "de", week: "current" }`; die Antwort enthielt am 02.11.2026
+284 eindeutige Angebotsobjekte.
+
+Die offizielle Angebotsseite bezeichnet die Eintraege als aktuelle ALDI-Nord-
+Angebote und wirbt mit Angeboten "in deiner Filiale". Der Datenabruf enthaelt
+aber **keine** Postleitzahl, Filial-ID oder Region-Auswahl. Der offizielle
+Filialfinder nutzt separat `STORE_UBERALL_LOCATIONS_GET`. Sein Snapshot hatte
+2.234 Standorte und vier ALDI-Nord-Eintraege mit PLZ 48599. Die bestehende
+Projektzeile `aldi-nord-epe` nennt keine Strasse; der offizielle Finder markiert
+keinen dieser vier Eintraege ausdruecklich als Epe. Die exakte Filialadresse
+bleibt deshalb unbestaetigt.
+
+Der Adapter ordnet die von der Projektkohorte ausgewaehlte Zeile
+`ALDI Nord Epe` dem **ALDI-Nord-Kettenangebot** zu, weil Kette und PLZ
+uebereinstimmen. Er behauptet weder filialspezifische Verfuegbarkeit noch
+Lagerbestand. `sourceScope: "aldi-nord-chain"` und
+`localApplicability.storeLevelStockKnown: false` bleiben in den Dateien
+sichtbar. Es ist ein ALDI-Nord-Kettenpreis, der anhand der bestehenden
+Projektzuordnung dem lokalen Vergleichsmarkt zugeordnet wird; andere Filial-IDs
+werden vom Adapter verworfen. Es ist keine Zusage, dass der konkrete Artikel
+in der nicht adressgenau identifizierten Epe-Filiale noch vorrätig ist. Bei einem kuenftigen
+ALDI-seitigen Filialfilter muss die Zuordnung enger werden; eine deutschland-
+oder haendleruebergreifende Preis-Uebertragung findet nicht statt.
+
+Die Roh-Snapshots und `evidence.json` liegen lokal unter
+`data/raw/offers/aldi-nord/discovery/` und sind von Git ausgeschlossen. Die
+kleine versionierte Fixture `test/fixtures/aldi-nord-current-offers.json`
+enthaelt nur die fuer Parsing und Pruefung noetigen, aus diesem echten Abruf
+sanitisierten Felder.
+
+### Felder Und Sichere Promotion
+
+Die Quelle liefert pro Produkt unter anderem `objectID`, `name`, `salesUnit`,
+`isAvailable`, `isComingSoon`, `isRecall`, `currentPrice.priceValue`,
+`currentPrice.strikePrice`, `priceTagLabels` und `promotionPrices`. Die
+lokalen Angebotsdaten `validFromLocalDate` und `validUntilLocalDate` stammen
+ausschliesslich aus `promotionPrices`; es wird kein Datum aus der Abrufzeit
+oder Kategorie erfunden. Die Preislabels werden unveraendert im Rohkandidaten
+behalten. Preislabels und offizielle Kurz-/Langtexte werden auf Hinweise wie
+`4 kaufen +1 gratis` geprueft; diese fuehren zu `conditional-price` und werden
+nicht als normaler Einzelpreis ausgegeben.
+
+`AldiNordOfferAdapter` verwendet den gemeinsamen `ProductMatcher`, prueft
+aber zusaetzlich eine bekannte Fehlzuordnung: `Djuvec-Reis-Gericht` enthaelt
+den Begriff `Reis`, ist aber kein Angebot von plain Reis. Unbekannte Namen,
+ambige/ausgeschlossene Matches, bedingte Preise, nicht unterstuetzte oder
+fehlende Packungsgroessen, fehlende Preis-/Zeitfelder, nicht verfuegbare,
+zukuenftige oder zurueckgerufene Produkte bleiben im Review. Die aktuell
+unterstuetzten eindeutigen Verkaufseinheiten enthalten z.B. `250-g-Packung`,
+`650-g-Schale`, `1-L-Packung`, Multipacks mit expliziter Menge, zaehlbare
+`n-er-Packung` und das eindeutige `Stueck`. `Packung`, `kg-Preis`, `Dose`
+ohne Mengenangabe, `Stueck/2er-Packung` und andere mehrdeutige Einheiten
+werden nicht geraten.
+
+Reale Stichproben gegen die normalisierte Ausgabe (Abruf 02.11.2026):
+
+| Quell-ID / Name | Originaleinheit | Preis | Quellgueltigkeit | Ergebnis am 02.11. |
+| --- | --- | ---: | --- | --- |
+| `4704` Butter | `250-g-Packung` | 1,49 EUR | 02.11.–07.11.2026 | optimizer-ready: 250 g, `butter`, ALDI Nord Epe |
+| `6766` Rispentomaten | `650-g-Schale` | 1,69 EUR | 05.11.–07.11.2026 | Review: `not-yet-valid` bis 05.11.; Preis/Packung unveraendert |
+| `1021924` Frische Milch | `1-L-Packung` | 0,99 EUR | 05.11.–11.11.2026 | Review: `not-yet-valid` bis 05.11. |
+| `1037558` Weihnachtskarte | `Stueck/2er-Packung` | 3,96 EUR | 02.11.–07.11.2026 | Review: `conditional-price`, unklare Packung und kein Produktmatch |
+| `1015587` Djuvec-Reis-Gericht | `800-g-Dose` | 2,49 EUR | 02.11.–07.11.2026 | Review: `source-product-variant`, kein plain-Reis-Match |
+
+Die akzeptierte Butter-Ausgabe behaelt Quelle, Quell-ID, Abrufzeit, Store-ID,
+Paketmenge, Originalnamen und lokale Gueltigkeitsdaten. Vergleichs-/Basispreise
+werden nicht als Regalpreis missverstanden.
+
+Der komplette Live-Lauf desselben Tages erzeugte 284 Kandidaten, 1
+optimizer-ready Angebot und 283 Review-Eintraege. Haeufige, sich ueberlappende
+Review-Gruende waren 277 ungematchte Namen, 120 noch nicht gueltige Angebote,
+62 nicht unterstuetzte Verkaufseinheiten und 4 bedingte Preise. Die niedrige
+Promotionsquote ist angesichts des kleinen gemeinsamen Produktkatalogs und der
+strengen Packungs-/Bedingungspruefung beabsichtigt.
+
+### Ausfuehrung Und Tests
+
+```bash
+npm run fetch:aldi-nord-offers
+npm run fetch:aldi-nord-offers -- --refresh
+npm run fetch:aldi-nord-offers -- --as-of 2026-11-02
+```
+
+Der erste Aufruf verwendet einen intakten, validierten Rohabruf bis zu sechs
+Stunden wieder. `--refresh` erzwingt genau einen neuen Seitenabruf. Netzwerk-
+Requests haben 15 Sekunden Timeout, maximal zwei Retries mit begrenztem
+Backoff; 4xx ausser 429 werden nicht wiederholt. Roh-HTML und SHA-256-Metadaten
+bleiben fuer Reproduzierbarkeit erhalten. Kandidaten-, Review- und
+optimizer-ready JSON liegen unter `data/normalized/offers/aldi-nord/` und
+werden nicht versioniert. Geaenderte Seitenstrukturen enden mit einer
+konkreten Fehlermeldung und der Rohantwort bleibt zur Analyse erhalten.
+
+Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
+HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
+Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
+Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
