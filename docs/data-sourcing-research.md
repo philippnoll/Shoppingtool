@@ -703,15 +703,20 @@ HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
 Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
 Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
 ## K+K Discovery
+## K+K Discovery und Adapter
 
 Die K+K-Quellenpruefung vom 02.11.2026 ist in
-[`docs/kk-offers-research.md`](kk-offers-research.md) dokumentiert. Die
-Retailer-Seite benennt einen aktuellen Prospekt der KW 45. Nur direkt
-abgefragte, aus der oeffentlichen Viewer-Konfiguration abgeleitete Pfade
-lieferten 404; der normale Viewer-Ablauf wurde mangels funktionierendem
-`chrome-devtools-axi`-Browser nicht verifiziert. Die zugaenglichen
-Wochenangebotsbilder enthalten keine exakten Gueltigkeitsdaten. Die geprueften
-lokalen MeinProspekt- und KaufDA-Seiten liefern keine K+K-Angebote. Ein
-Adapter ist deshalb nicht implementiert; siehe Follow-up in
-[`docs/kk-offers-research.md`](kk-offers-research.md). Die Epe-Filialzuordnung
-der zwei internen IDs bleibt eine separate Captain-Entscheidung.
+[`docs/kk-offers-research.md`](kk-offers-research.md) dokumentiert. Der
+normale oeffentliche Viewer laedt den Katalog `kundk_kw45` mit 12 Seiten und
+Textdateien `bk_1.txt` bis `bk_12.txt`. Die Gueltigkeit 02.11.2026 bis
+07.11.2026 steht explizit auf den Prospektseiten. Der Adapter
+`scripts/parse-kk-offers.js` liest die Textseiten, parst eine eindeutig
+quantifizierbare Barilla-Pasta-Offerte und haelt Tafel-Aepfel ohne sicher
+zugeordnete Menge/Preis in Review. Der Textstrom ist nicht generell
+positionsstrukturiert; nicht unterstuetzte Artikel werden nicht geraten.
+
+Ohne explizite `--store-id`-Option erzeugt der Lauf keine filialgebundenen
+Optimizer-Angebote. Der offizielle Filialfinder zeigt drei Epe-Filialen mit
+demselben Prospektlink, waehrend `data/stores.json` zwei interne K+K-IDs ohne
+Strassenadresse fuehrt. Die bevorzugte Store-Auswahl und die Zuordnung West/
+Ost zu konkreten Filialen bleiben eine separate Captain-Entscheidung.

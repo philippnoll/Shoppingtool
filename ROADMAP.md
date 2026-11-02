@@ -473,19 +473,18 @@ Akzeptanzkriterien je Haendler:
 - Reale Stichproben sind getestet.
 - Ausgabe kann ohne Sonderfall im `ShoppingOptimizer` verwendet werden.
 
-K+K-Discovery am 02.11.2026: Die offizielle Seite verlinkt einen
-Blaetterkatalog fuer KW 45. Direkt abgefragte, aus der Viewer-Konfiguration
-abgeleitete Pfade liefern 404; der normale Viewer-Ablauf ist mangels
-funktionierendem `chrome-devtools-axi`-Browser nicht verifiziert. Zugaengliche
-Angebotsbilder nennen keine exakten Gueltigkeitsdaten; ein Beispiel hat
-zudem eine Packungsgroessenspanne. Die geprueften lokalen MeinProspekt- und KaufDA-Seiten enthalten keine
-K+K-Angebote. Der Adapter bleibt unimplementiert, bis eine legitime Quelle
-mit belastbaren Angebotsfeldern und Gueltigkeit gefunden wird. Der offizielle
-Filialfinder zeigt drei Epe-Filialen mit demselben KW-45-Link, waehrend
-`data/stores.json` zwei Epe-IDs ohne Strassenadresse fuehrt; die Zuordnung ist
-eine separate Captain-Entscheidung. Details und Quell-URLs: [K+K Offer Source
-Research](docs/kk-offers-research.md). Keine Kalenderwochen-Daten, Filialen
-oder Packungsmengen erraten und keine Angebote aus diesem Stand promoten.
+K+K-Discovery und erster Adapter (02.11.2026): Der normale offizielle Viewer
+laedt `kundk_kw45`, 12 Textseiten und eine explizite Gueltigkeit vom
+02.11.2026 bis 07.11.2026. `npm run parse:kk-offers` sichert die Originale
+unter `data/raw/offers/kk/`, parst eine klar quantifizierte Barilla-Pasta-
+Offerte und haelt Tafel-Aepfel ohne sicher zugeordnete Packungsmenge/Preis in
+Review. Andere Katalogartikel werden noch nicht geparst; das Layout der
+Textschicht ist nicht positionsstrukturiert. Der Standardlauf schreibt keine
+filialgebundenen Offers, solange keine `--store-id`-Werte explizit uebergeben
+werden. Der offizielle Finder zeigt drei Epe-Filialen mit demselben Prospekt,
+waehrend `data/stores.json` zwei K+K-IDs ohne Strassenadresse fuehrt; die
+bevorzugte Store-Auswahl und West/Ost-Zuordnung bleiben Captain-pending. Details
+und Quell-URLs: [K+K Offer Source and Adapter](docs/kk-offers-research.md).
 
 ### Phase 6: Persistenz, Historie Und NAS-Backend
 
