@@ -79,34 +79,12 @@ Die Lidl-App-Bons des Users sind sehr wertvoll:
 
 Einschraenkung: Bons zeigen vergangene Einkaeufe, nicht zukuenftige Angebote. Aber sie sind sehr gut, um unser Produktmodell und die Normalisierung zu trainieren.
 
-## Empfohlener Naechster Schritt
+## Einstieg In Die Lidl-Datenkette
 
-Nicht direkt Datenbank bauen.
-
-Erst einen kleinen Scraper-/Importer-Spike bauen. Wir starten mit Lidl, weil Lidl in der ersten echten Markt-Kohorte des Users liegt.
-
-```text
-scripts/discover-lidl-offers.js
-        |
-        v
-data/raw/offers/lidl/*.html
-        |
-        v
-data/raw/offers/lidl/*.analysis.json
-        |
-        v
-data/normalized/offers.json
-        |
-        v
-ShoppingOptimizer bekommt normalized offers
-```
-
-Der Spike darf erstmal nur ein JSON-File erzeugen. Ziel ist nicht Perfektion, sondern herauszufinden:
-
-1. Kommen wir ueberhaupt an strukturierte Angebotsdaten?
-2. Welche Felder bekommen wir wirklich?
-3. Wie stark unterscheiden sich die Haendler?
-4. Was muessen wir normalisieren?
+Der Discovery-Spike ist inzwischen Teil der
+[wiederholbaren End-to-End-Pipeline](#wiederholbare-end-to-end-pipeline).
+Die Anbindung ihrer Ergebnisse an den `ShoppingOptimizer` ist der naechste
+Schritt in [Phase 4 der Roadmap](../ROADMAP.md#phase-4-echte-angebote-in-die-ui5-app-einbinden).
 
 ## Erste Lokale Markt-Kohorte
 
@@ -159,7 +137,8 @@ Der interne Flyer-Endpunkt liefert JSON. Ein Testabruf fuer den Aktionsprospekt 
 
 Wichtig: Die strukturierten Produktobjekte sind nicht automatisch eine perfekte Lebensmittelliste. Viele klassische Lebensmittelangebote stehen eher in `pages[].keyWords` und `pages[].altText`, zum Beispiel Tomaten, Kartoffeln, Butter oder Maggi Fix.
 
-Das heisst: Lidl ist technisch erreichbar, aber wir brauchen sehr wahrscheinlich noch einen Lidl-spezifischen Normalizer, der aus Flyer-JSON, Seiten-Texten und eventuell PDF/Bilddaten unsere internen Angebote baut.
+Die daraus entstandene Lidl-spezifische Verarbeitung ist in der
+[End-to-End-Pipeline](#wiederholbare-end-to-end-pipeline) umgesetzt.
 
 ## Zieldatenformat Fuer Angebote
 
@@ -236,7 +215,9 @@ npm run normalize:lidl -- data/raw/offers/lidl/<timestamp>.json
 
 Das Ergebnis wird unter `data/normalized/flyers/lidl/` erzeugt und nicht versioniert. Fuer automatisierte Tests liegt nur ein kleiner, versionierter Ausschnitt echter Lidl-Felder unter `test/fixtures/`.
 
-Naechster Untersuchungsschritt: Produkt, Preis und Packungsgroesse auf einer Lebensmittel-Prospektseite korrekt einander zuordnen. Erst daraus entstehen Objekte, die der `ShoppingOptimizer` verwenden darf.
+Die Zuordnung von Produkt, Preis und Packungsgroesse uebernimmt inzwischen der
+[Kandidatenparser](#lidl-angebotskandidaten); die
+[Promotion](#promotion-und-review) prueft die Verwendbarkeit fuer den Optimizer.
 
 ## Lidl PDF Statt OCR
 
@@ -249,7 +230,7 @@ Je 500 g
 0.88
 ```
 
-Damit ist fuer Lidl vorerst keine Bild-OCR notwendig. Die neue Pipeline kann so aussehen:
+Damit ist fuer Lidl vorerst keine Bild-OCR notwendig. Der PDF-Verarbeitungspfad ist:
 
 ```text
 Flyer JSON -> PDF-URL -> PDF -> Layout-Text -> Lidl-Angebotsparser
@@ -261,7 +242,7 @@ Der lokale Rechner beziehungsweise spaeter die NAS braucht dafuer `pdftotext` au
 npm run extract:lidl-pdf -- /pfad/zum/lidl-prospekt.pdf
 ```
 
-Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der spaetere Angebotsparser bekommt fuer seine Tests nur kleine, gezielte Textausschnitte.
+Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der Angebotsparser nutzt fuer seine Tests kleine, gezielte Fixtures.
 
 ### Textpositionen Aus Der PDF
 
@@ -284,7 +265,7 @@ Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Ro
 }
 ```
 
-Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die fachliche Heuristik konzentrieren: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?
+Der Angebotsparser muss dadurch kein XML kennen. Er konzentriert sich auf die fachliche Heuristik: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?
 
 ## Lidl Angebotskandidaten
 
@@ -299,6 +280,16 @@ Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die f
 - Produktnamen, die durch PDF-Wortumbrueche getrennt wurden
 
 Die Zuordnung basiert auf Spalten, Abstaenden und Lesereihenfolge. Unsichere Kiloware bekommt eine niedrigere `confidence` als ein vollstaendiger Block aus Produktname, Menge und Preis.
+
+Seitenkoepfe im oberen Zehntel der PDF-Seite wie `Ab Do. 5.11. bis Sa. 7.11.`
+schraenken die Kandidatengueltigkeit vor der Promotion ein. Das fehlende Jahr
+wird aus dem Prospektzeitraum bestimmt, auch ueber den Jahreswechsel. Bei einem
+reinen `Ab`-Datum bleibt das Prospektende erhalten; ohne erkannten Datumskopf
+gilt weiterhin der Prospektzeitraum. Nicht aufloesbare Kopfdaten werden `null`
+und damit vom Promoter ins Review gelegt. So bleiben etwa Romatomaten von
+PDF-Seite 60 des Novemberprospekts am 02.11.2026 mit `not-yet-valid` im Review
+und werden erst ab 05.11. freigegeben. Beide Parser-Einstiege (Einzelaufruf und
+Pipeline) nutzen dieselbe Regel, auch bei wiederverwendeter PDF-Extraktion.
 
 Getestet sind unter anderem zwei echte, unterschiedlich aufgebaute Seiten:
 
@@ -444,7 +435,7 @@ Der 200-Kandidaten-Prospekt ergab fuer den historischen Stichtag 23.07.2026:
 - 17 Lidl-Plus-Bedingungen
 - 6 zu niedrige Parser-Konfidenzen
 
-Die Gruende koennen sich pro Kandidat ueberschneiden. Mit dem aktuellen Datum
+Die Gruende koennen sich pro Kandidat ueberschneiden. Mit dem Referenzdatum
 26.07.2026 werden korrekt alle 200 Kandidaten als abgelaufen und kein Angebot
 als optimizerfaehig bewertet.
 
@@ -461,3 +452,128 @@ Butter, Brot und Kaese. Die Promotion darf die echte Angebotsmenge nicht in
 `Stk` umdeuten. Vor der UI-Anbindung muss deshalb entschieden werden, wie
 stueckbasierte Listeneingaben mit gewichtsbezogenen Packungen kompatibel
 gemacht werden.
+
+## Wiederholbare End-to-End-Pipeline
+
+Stand: 2026-07-27
+
+Phase 3 verbindet die vorhandenen, bewusst getrennten Stufen:
+
+```text
+Prospekt-Uebersicht
+  -> Aktionsprospekt aus JSON-LD waehlen
+  -> Flyer-Endpunkt und PDF als Rohdaten sichern
+  -> pdftotext Layout + bbox
+  -> unveraenderte Kandidaten
+  -> konservatives ProductMatcher-Ergebnis
+  -> Review oder Promotion
+  -> Qualitaetsbericht
+```
+
+Aufruf, Voraussetzungen, Datumsoption und Ausgabeverzeichnisse stehen in der
+[README](../README.md#lidl-offer-pipeline).
+
+### Konfiguration
+
+`scripts/run-lidl-offer-pipeline.js` liest optionale Umgebungsvariablen:
+
+- `LIDL_OFFERS_URL` ersetzt die Discovery-URL. Neben der Prospekt-Uebersicht
+  wird direktes Flyer-JSON mit einem `flyer`-Objekt akzeptiert; auch dessen
+  Struktur und Gueltigkeit werden geprueft.
+- `LIDL_FLYER_API_URL` ersetzt den Flyer-Endpunkt. Bei Auswahl ueber JSON-LD
+  ergaenzt die Pipeline `flyer_identifier` und setzt `region_id=0`.
+- `LIDL_STORE_ID` ordnet die erzeugten Angebote einem Eintrag in
+  `data/stores.json` zu. Es waehlt keine regionale Lidl-Quelle; unbekannte
+  Markt-IDs fuehren zu Review-Eintraegen statt zu freigegebenen Angeboten.
+- `LIDL_REQUEST_TIMEOUT_MS`, `LIDL_REQUEST_MAX_ATTEMPTS` und
+  `LIDL_RETRY_DELAY_MS` steuern Netzwerk-Timeout, Versuchszahl und die Basis
+  der zwischen Versuchen steigenden Wartezeit.
+- `LIDL_DISCOVERY_CACHE_MS` steuert die maximale Wiederverwendungsdauer der
+  Discovery-Antwort.
+
+Die Standardwerte und numerischen Fallback-Regeln stehen in
+`scripts/lib/LidlOfferPipeline.js` (`createConfig`, `numberOption`) und
+`scripts/lib/HttpClient.js`.
+
+### Artefakte Und Provenienz
+
+Die Pipeline verwendet einen stabilen Prospekt-Identifier fuer fachliche
+Ausgabedateien. Ein erneuter Lauf schreibt deshalb denselben Prospekt-Snapshot
+neu und haengt nicht dieselben Angebote als Duplikate an. Discovery-Antworten,
+rohe Flyer-Quellen und PDFs werden mit ihrem Inhalts-Hash abgelegt;
+Extraktionen tragen den Hash des zugehoerigen PDFs. Eine spaetere
+Quellenaenderung ueberschreibt dadurch nicht die Belege eines frueheren Laufs.
+Discovery-, Quell- und Extraktionsmetadateien werden dagegen aktualisiert;
+auch normalisierte Ausgaben und Qualitaetsberichte sind ersetzbare Snapshots,
+kein Archiv aller Laeufe.
+Lokal erhalten bleiben:
+
+- die Discovery-Antwort und ihre Abrufmetadaten;
+- pro Prospekt die unveraenderte Flyer-JSON, Quell-URL, Abrufzeit und PDF;
+- PDF-Hash, Layout-Text, Positions-XHTML und Extraktionszeit;
+- normalisierte Flyer-Metadaten;
+- getrennte Kandidaten-, Review-, optimizer-ready- und Quality-Dateien.
+
+Die von der Pipeline erzeugten Flyer-, Kandidaten-, Review- und
+Optimizer-Dateien enthalten Prospekt-ID und Gueltigkeitszeitraum. Ihr
+`provenance`-Objekt auf Dokumentebene verweist auf Quell-Dateien, URLs,
+Abrufzeiten und PDF-Hash. Damit kann
+ein spaeterer Parserfehler gegen die damalige Quelle untersucht werden. Diese
+laufzeitgenerierten Dateien bleiben ueber `.gitignore` ausserhalb von Git;
+versioniert werden nur kleine Fixtures.
+
+### Schonende Wiederverwendung Und Netzwerkfehler
+
+Eine frische Discovery-Antwort wird fuer einen begrenzten Zeitraum
+wiederverwendet, wenn die gespeicherte Datei weiterhin ihren SHA-256-Hash hat.
+Die prospektspezifische Quelle gilt bei derselben stabilen Identitaet und
+Quell-URL als wiederverwendbar, wenn ihr gespeicherter Hash passt und Struktur
+sowie ausgewaehlter Gueltigkeitszeitraum validiert wurden. Abgelehnte Antworten
+bleiben als inhaltsadressierte Rohdaten erhalten, werden aber nicht als
+aktueller Cache veroeffentlicht. Eine PDF wird nur zusammen mit passender URL
+und gespeichertem SHA-256-Hash verwendet; extrahierter Text nur, wenn sein
+PDF-Hash passt, der Layout-Text mehr als Leerraum enthaelt und das lesbare
+Positionsdokument mindestens ein nichtleeres Wort enthaelt. Dieselbe
+Inhaltspruefung erfolgt vor der Cache-Freigabe neuer Extraktionen. Bild-PDFs
+ohne Textebene brechen damit als Extraktionsfehler ab, bevor vorhandene
+Angebotsausgaben ersetzt werden; einzelne leere Seiten bleiben erlaubt.
+Flyer-Quelle und PDF haben keine eigene zeitliche Ablaufgrenze. Aenderungen
+beim Anbieter unter unveraenderter URL werden bei Wiederverwendung nicht
+abgerufen; dafuer dient `--force`. Bei direktem Flyer-JSON als Discovery-Quelle
+muss zusaetzlich der Quell-Hash zur verwendeten Discovery-Antwort passen.
+
+Netzwerkabrufe haben einen Timeout, standardmaessig maximal drei Versuche und
+eine steigende kurze Wartezeit. Nur typische temporaere Statuscodes sowie
+Netzwerk- und Timeoutfehler werden erneut versucht. Permanente HTTP-Fehler
+werden sofort, temporaere Fehler nach dem letzten Versuch mit ihrer
+eigentlichen Ursache gemeldet. Es gibt keine unbegrenzten Retries.
+
+### Explizite Fehler Und Qualitaetsbericht
+
+Der Lauf stoppt mit benannter Pipeline-Stufe bei:
+
+- nicht mehr erkennbarem JSON-LD oder veraenderter Flyer-JSON-Struktur;
+- keinem aktiven oder kommenden Aktionsprospekt fuer das Referenzdatum;
+- vom ausgewaehlten JSON-LD-Ereignis abweichenden Flyer-Gueltigkeitsdaten;
+- fehlender `pdfUrl`;
+- einer Antwort ohne PDF-Signatur;
+- fehlendem `pdftotext`, leerer oder unlesbarer Extraktion;
+- unlesbaren Marktstammdaten oder einem Promotionfehler.
+
+Die bereits gespeicherten Rohartefakte werden dabei nicht geloescht. Der
+Lauf ersetzt die normalisierte Flyer-Datei und die Kandidatendatei erst nach
+erfolgreicher Extraktion und erfolgreichem Parsing. Dabei werden vorherige Review-,
+Optimizer- und Quality-Dateien entfernt, bevor die Marktstammdaten gelesen
+und die Kandidaten promotet werden. Scheitert diese spaetere Stufe, bleiben
+die neuen Kandidaten erhalten, aber die drei Ergebnisdateien fehlen. Ein
+Abbruch ist daher kein vollstaendiger neuer Snapshot; die Dateien werden
+einzeln atomar geschrieben, nicht als gemeinsamer Satz.
+
+Der Erfolgslauf erzeugt `<prospekt>.quality-report.json` mit Seitenzahl,
+Kandidatenzahl, Match-Arten, Trefferzahl, Promotionszahl, Review-Gruenden,
+Warnungen, Wiederverwendungsstatus sowie den wichtigsten Quell- und
+Ausgabepfaden. Abweichende Seitenzahlen, keine Kandidaten oder keine
+freigegebenen Angebote werden als Warnungen im erfolgreichen Bericht
+gemeldet; `status: "completed"` garantiert somit keine nutzbaren Angebote.
+Die automatisierten Tests verwenden lokale Fixtures und ein
+injiziertes Fake-Netzwerk; `npm test` braucht daher keine Lidl-Verfuegbarkeit.

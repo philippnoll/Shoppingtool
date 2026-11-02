@@ -15,8 +15,6 @@ Prefer small commits, short explanations, and frequent UI5 binding checks.
 - Scraper, PDF parsing, normalization, database, and other infrastructure may be implemented in larger/faster iterations. Explain their purpose, data flow, important decisions, and results at a high level, but do not quiz the user on implementation details unless requested.
 - Document scraper and infrastructure decisions in the project so later agents can continue without repeating the discovery work.
 - Keep implementation steps small and commit them as separate learning units.
-- Do not run `git push`; the user handles pushes.
-- Tell the user when pushing is possible.
 - Do not start or inspect the dev server unless needed for the current task.
 
 ## Current App Direction
@@ -99,6 +97,8 @@ Save final purchase list and prices
 - `scripts/lib/LidlOfferPromoter.js`: validates, matches, reviews, and promotes safe candidates.
 - `scripts/parse-lidl-offers.js`: produces candidate, review, and optimizer-ready JSON in one run.
 - `scripts/promote-lidl-offers.js`: re-runs promotion for an existing candidate file.
+- `scripts/run-lidl-offer-pipeline.js`: runs the complete, repeatable Lidl pipeline.
+- `scripts/lib/LidlOfferPipeline.js`: orchestrates retrieval, artifact reuse, extraction, parsing, promotion, and quality reporting.
 - `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
 ## Current Scraper State
@@ -129,9 +129,10 @@ The Lidl source investigation established:
 - `LidlOfferPromoter` keeps parser and matcher confidence separate, validates source fields and validity, deduplicates stable source rows, resolves store names, and reports every rejected candidate with reasons.
 - Parser confidence below 0.9 is reviewed instead of promoted.
 - Lidl Plus prices are marked as loyalty-program conditions and excluded from generally available optimizer-ready data.
-- For the valid historical date 2026-07-23, the 200-candidate flyer produces 8 optimizer-ready offers and 192 review entries. With the current date 2026-07-26, all 200 are correctly rejected as expired.
+- Historical promotion results and validity checks are recorded in [the promotion reference](docs/data-sourcing-research.md#promotion-und-review).
 - `parse:lidl-offers` now creates candidate, review, and optimizer-ready files in one run; `promote:lidl-offers` can reprocess an existing candidate file.
-- The next infrastructure step is Phase 3: orchestrate discovery, download, extraction, parsing, promotion, and quality reporting.
+- Pipeline provenance, artifact reuse and failure handling are documented in [the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
+- The next product step is documented in [Phase 4 of the roadmap](ROADMAP.md#phase-4-echte-angebote-in-die-ui5-app-einbinden).
 
 ## Verified Commands
 
@@ -147,12 +148,14 @@ npm run build
 
 ## Next Useful Steps
 
-- Continue the Lidl infrastructure without detailed teaching questions:
-  - orchestrate discovery, download, extraction, parsing, promotion, and quality reporting;
-  - preserve flyer IDs, fetch times, source files, and raw data for reproducibility;
-  - add respectful timeout/retry behavior and reuse already downloaded data;
-  - test missing or changed PDFs and make failures explicit;
-  - keep optimizer-ready output separate from review data.
 - Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
+- For running the Lidl pipeline, see [the README](README.md#lidl-offer-pipeline).
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
 - Treat `ROADMAP.md` as the authoritative ordered handoff for future work.
+
+## Maintaining this file
+
+Keep this file for knowledge useful to almost every future agent session in this project.
+Do not repeat what the codebase already shows; point to the authoritative file or command instead.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve this bar for all agents and keep entries concise.

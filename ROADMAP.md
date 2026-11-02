@@ -1,6 +1,6 @@
 # Shoppingtool: Projektstand Und Roadmap
 
-Stand: 2026-07-26
+Stand: 2026-07-27
 
 Dieses Dokument ist die zentrale Uebergabe fuer Menschen und Coding Agents. Es
 beschreibt, welches Produkt gebaut wird, was bereits funktioniert, welche
@@ -46,7 +46,6 @@ sparsam und nachvollziehbar abgerufen werden.
   duerfen schneller und in groesseren Schritten umgesetzt werden. Wichtig sind
   dort eine dokumentierte Datenkette, Tests und nachvollziehbare Ergebnisse.
 - Kleine, thematisch geschlossene Commits sind erwuenscht.
-- Der User uebernimmt `git push`.
 - Die App soll erst produktiv genutzt werden, wenn mindestens die wesentlichen
   Scraper funktionieren. Zwischenloesungen mit manueller Persistenz sind daher
   kein eigenes Produktziel.
@@ -154,6 +153,8 @@ Implementierte Stufen:
 6. `LidlOfferPromoter.js` prueft, matcht und promotet nur sichere Kandidaten.
 7. `parse-lidl-offers.js` verarbeitet einen kompletten Prospekt und schreibt
    Kandidaten-, Review- und optimizerfaehige Dateien.
+8. `run-lidl-offer-pipeline.js` verbindet Discovery, Download, Extraktion,
+   Parsing, Matching, Promotion und Qualitaetsbericht in einem Kommando.
 
 Der Kandidatenparser unterstuetzt derzeit:
 
@@ -188,6 +189,8 @@ Cantaloupemelone und Rinder-Rumpsteak.
 - `docs/ui5-basics.md` dokumentiert die bisher besprochenen UI5-Grundlagen.
 - `docs/data-sourcing-research.md` dokumentiert Quellen, Befunde und die
   Lidl-Pipeline im Detail.
+- Die End-to-End-Orchestrierung wird mit lokalen Fixtures und injiziertem
+  Netzwerk getestet; die normale Test-Suite haengt nicht von Lidl ab.
 - Zuletzt waren `npm test`, `npm run lint` und `npm run build` erfolgreich.
 - `npm audit --omit=dev` meldete keine produktiven Schwachstellen.
 
@@ -389,28 +392,25 @@ stimmen dort mit der Ausgabe ueberein.
 
 ### Phase 3: Lidl-Pipeline Robust Und Wiederholbar Machen
 
-Status: als Naechstes umsetzen.
+Status: umgesetzt.
 
 Ziel: Ein neuer Lidl-Prospekt kann ohne manuelle Dateisuche verarbeitet
 werden.
 
-Arbeitspakete:
+Die Orchestrierung ist implementiert. Aufruf und Voraussetzungen stehen in der
+[README](README.md#lidl-offer-pipeline); Datenfluss, Provenienz,
+Wiederverwendung, Fehlerfaelle und Qualitaetsbericht in der
+[Pipeline-Referenz](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
+Die deterministische Abdeckung steht in `test/lidlOfferPipeline.test.js`.
 
-1. Discovery, Download, Extraktion, Parsing und Matching orchestrieren.
-2. Schonende Abrufintervalle, Timeout, Retry und aussagekraeftige Fehler
-   definieren.
-3. Prospekt-ID, Abrufzeit und Quelldatei fuer Reproduzierbarkeit behalten.
-4. Parser-Qualitaetsbericht mit Trefferquote und Warnungen erzeugen.
-5. Weitere echte Seiten als kleine Fixtures aufnehmen, sobald neue Layouts
-   auftreten.
-6. Verhalten bei veraendertem oder fehlendem PDF testen.
+Weitere echte Seiten werden weiterhin als kleine Fixtures aufgenommen, sobald
+neue Layouts auftreten.
 
-Akzeptanzkriterien:
-
-- Ein End-to-End-Kommando verarbeitet den aktuellen Prospekt.
-- Wiederholte Laeufe erzeugen keine fachlichen Duplikate.
-- Ein Quellenwechsel oder Parserproblem ist im Log klar sichtbar.
-- Rohdaten bleiben fuer spaetere Fehleranalyse erhalten.
+Live-Verifikation am 27.07.2026 mit dem Aktionsprospekt 27.07.-01.08.2026:
+69 PDF-Seiten, 191 Kandidaten, 4 optimizerfaehige Angebote und 187
+Review-Eintraege. Der direkt folgende zweite Lauf verwendete Discovery,
+Flyer-Quelle, PDF und Extraktion vollstaendig wieder und erzeugte dieselben
+fachlichen Zahlen.
 
 ### Phase 4: Echte Angebote In Die UI5-App Einbinden
 
@@ -573,24 +573,15 @@ Einkaufsliste, Angebote und Bons.
 
 ## Naechste Konkrete Arbeitssession
 
-Die naechste Harness sollte genau hier beginnen:
+Phase 4 beginnt wieder als kleine UI5-Lerneinheit:
 
 1. `git status --short --branch` und die letzten Commits pruefen.
-2. Discovery-, Download-, Extraktions-, Parser- und Promotion-Skripte samt
-   Tests lesen.
-3. Tests fuer eine gemeinsame Lidl-Orchestrierung zuerst schreiben.
-4. Discovery, PDF-Download, Extraktion, Parsing und Promotion in einem
-   End-to-End-Kommando verbinden.
-5. Schonende Timeouts, begrenzte Retries und die Wiederverwendung vorhandener
-   Rohdaten definieren.
-6. Prospekt-ID, Abrufzeit und Quelldateien fuer reproduzierbare Laeufe
-   beibehalten.
-7. Einen Qualitaetsbericht mit Seitenzahl, Kandidatenzahl, Match-Arten,
-   Review-Gruenden und Warnungen erzeugen.
-8. Verhalten bei fehlendem oder veraendertem PDF testen.
-9. `npm test`, `npm run lint` und `npm run build` ausfuehren.
-10. Einen kleinen lokalen Commit erstellen und dem User sagen, dass gepusht
-    werden kann. Nicht selbst pushen.
+2. Einen vorhandenen `.optimizer-ready.json`-Snapshot und seinen
+   Qualitaetsbericht gemeinsam lesen.
+3. Festlegen, wie die App die erzeugte Datei vor einem Backend laedt.
+4. Den ersten kleinen Schritt fuer ein klar abgegrenztes Angebotsmodel planen.
+5. Lade-, Leer- und Fehlerzustand erklaeren und getrennt implementieren.
+6. Noch nicht behaupten, Prospektangebote seien vollstaendige Regalpreise.
 
 ## Wichtige Offene Entscheidungen
 
@@ -624,7 +615,10 @@ npm run lint
 npm run build
 ```
 
-Lidl-Einzelschritte:
+Der komplette Lidl-Lauf ist in der [README](README.md#lidl-offer-pipeline)
+beschrieben.
+
+Lidl-Einzelschritte fuer gezielte Diagnose:
 
 ```bash
 npm run discover:lidl

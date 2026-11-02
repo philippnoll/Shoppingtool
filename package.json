@@ -12,6 +12,7 @@
     "normalize:lidl": "node scripts/normalize-lidl-flyer.js",
     "parse:lidl-offers": "node scripts/parse-lidl-offers.js",
     "promote:lidl-offers": "node scripts/promote-lidl-offers.js",
+    "pipeline:lidl": "node scripts/run-lidl-offer-pipeline.js",
     "lint": "eslint webapp test scripts",
     "test": "node --test test/*.test.js"
   },
