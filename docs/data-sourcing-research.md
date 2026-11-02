@@ -768,7 +768,12 @@ einer Preisbedingung. Fuer allgemein verfuegbare Angebote muessen
 `priceType: "offer"` und `priceCondition: null` gesetzt sein. Die Datumsgrenzen
 sind inklusive und werden wie in der Promotion anhand des UTC-Kalendertags
 geprueft. Fuer weitere Haendler gilt derselbe Vertragsweg; nur deren
-Quelladapter und Eintraege im Marktregister kommen spaeter hinzu.
+Quelladapter, die erlaubte Quellen-/Kettenzuordnung in `OfferData` und Eintraege
+im Marktregister kommen spaeter hinzu. Dokumente brauchen eine unterstuetzte
+Quelle (`lidl-pdf` oder fuer absichtliche Tests `test-fixture`). Fehlende oder
+unbekannte Angebotsquellen und Angebote einer unpassenden Haendlerquelle werden
+ausgeschlossen. Dokumente mit gemischten Echt-/Testdatenquellen werden komplett
+abgewiesen; der Demo-Status stammt aus der geprueften Dokumentquelle.
 
 Der Optimizer bekommt ausschliesslich gefilterte Angebote. Eine Angebots-
 Teilsumme umfasst nur abgedeckte Artikel und wird in der UI nie als kompletter
@@ -788,7 +793,9 @@ einen echten Einkauf oder Produktionsbuild verwenden.
 Ohne veroeffentlichten Snapshot zeigt die App einen retrybaren Ladefehler. Ein
 formal gueltiger Snapshot ohne aktuell gueltige, unbedingte Angebote zeigt den
 Leerzustand. Die Aktualisieren-Schaltflaeche laedt die gleichen festen URLs
-mit Cache-Bypass; sie startet keinen Scraper. Die App erfindet keine
+mit Cache-Bypass; sie startet keinen Scraper. Jeder Refresh ueber den Controller,
+auch beim Tageswechsel vor der Optimierung, verwirft das bisherige Ergebnis
+sofort, bevor der neue Ladevorgang beginnt. Die App erfindet keine
 aktuellen Angebote, wenn die Daten fehlen oder abgelaufen sind. Der im Repository dokumentierte historische Prospekt hatte 8 optimizer-ready
 Angebote am 23.07.2026, war aber am 26.07.2026 bereits abgelaufen. Ein aktueller
 Live-Preisresultat-Test erfordert daher einen neu verarbeiteten und

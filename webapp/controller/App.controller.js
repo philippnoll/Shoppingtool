@@ -75,7 +75,8 @@ sap.ui.define([
     },
 
     onRefreshOffers: function () {
-      OfferModel.refresh(this.getView().getModel("offers"));
+      this._clearOptimizationResult();
+      return OfferModel.refresh(this.getView().getModel("offers"));
     },
 
     onListItemChanged: function () {

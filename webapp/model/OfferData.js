@@ -4,6 +4,10 @@ sap.ui.define([], function () {
   var OFFER_SNAPSHOT_URL = "data/offers/optimizer-ready.json";
   var STORE_CATALOG_URL = "data/stores.json";
   var ALLOWED_UNITS = ["g", "kg", "ml", "l", "stk"];
+  var OFFER_SOURCES = [
+    { id: "lidl-pdf", chain: "Lidl", isDemo: false },
+    { id: "test-fixture", chain: null, isDemo: true }
+  ];
 
   function load(oOptions) {
     var oConfig = oOptions || {};
@@ -23,6 +27,7 @@ sap.ui.define([], function () {
     var aOffers;
     var aAcceptedOffers = [];
     var aExcludedReasons = [];
+    var oSource;
 
     if (!Array.isArray(aStores) || !aStores.length || !aStores.every(isValidStore)) {
       throw createError("invalid-store-catalog");
@@ -33,6 +38,13 @@ sap.ui.define([], function () {
     }
 
     if (oSnapshot.offerCount !== undefined && oSnapshot.offerCount !== oSnapshot.offers.length) {
+      throw createError("invalid-offer-snapshot");
+    }
+
+    oSource = getSource(oSnapshot.source);
+    if (!oSource || oSnapshot.offers.some(function (oOffer) {
+      return isObject(oOffer) && getSource(oOffer.source) && oOffer.source !== oSource.id;
+    })) {
       throw createError("invalid-offer-snapshot");
     }
 
@@ -58,7 +70,7 @@ sap.ui.define([], function () {
       excludedReasons: aExcludedReasons,
       referenceDate: sReferenceDate,
       generatedAt: oSnapshot.generatedAt || "",
-      isDemo: oSnapshot.source === "test-fixture"
+      isDemo: oSource.isDemo
     };
   }
 
@@ -66,9 +78,15 @@ sap.ui.define([], function () {
     var oStore;
     var bValidFrom;
     var bValidTo;
+    var oSource;
 
     if (!isObject(oOffer)) {
       return "invalid-offer";
+    }
+
+    oSource = getSource(oOffer.source);
+    if (!oSource) {
+      return "invalid-source";
     }
 
     oStore = mStores[oOffer.storeId];
@@ -80,7 +98,11 @@ sap.ui.define([], function () {
       return "store-identity-mismatch";
     }
 
-    if (!isNonEmptyString(oOffer.source) || !isNonEmptyString(oOffer.productKey) || !isNonEmptyString(oOffer.offerName)) {
+    if (oSource.chain && oSource.chain !== oStore.chain) {
+      return "source-store-mismatch";
+    }
+
+    if (!isNonEmptyString(oOffer.productKey) || !isNonEmptyString(oOffer.offerName)) {
       return "invalid-offer";
     }
 
@@ -131,6 +153,12 @@ sap.ui.define([], function () {
   function isValidStore(oStore) {
     return isObject(oStore) && isNonEmptyString(oStore.id) &&
       isNonEmptyString(oStore.chain) && isNonEmptyString(oStore.name);
+  }
+
+  function getSource(sSource) {
+    return OFFER_SOURCES.find(function (oSource) {
+      return oSource.id === sSource;
+    });
   }
 
   function isAllowedUnit(sUnit) {

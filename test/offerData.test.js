@@ -118,7 +118,7 @@ test("rejects malformed envelopes and store catalogs", function () {
 });
 
 test("handles a valid snapshot with no offers as an empty result", async function () {
-  const oSnapshot = { kind: "optimizer-ready-offers", offerCount: 0, offers: [] };
+  const oSnapshot = { kind: "optimizer-ready-offers", source: "lidl-pdf", offerCount: 0, offers: [] };
   const oResult = await OfferData.load({
     fetch: createFetch(oSnapshot, aStores),
     now: "2026-07-23"
@@ -155,7 +155,7 @@ test("sets an actionable empty model state when a snapshot has no current offers
   const oModel = createModel();
 
   await OfferModel.refresh(oModel, {
-    fetch: createFetch({ kind: "optimizer-ready-offers", offerCount: 0, offers: [] }, aStores),
+    fetch: createFetch({ kind: "optimizer-ready-offers", source: "lidl-pdf", offerCount: 0, offers: [] }, aStores),
     now: "2026-07-23"
   });
 
@@ -176,4 +176,74 @@ test("requests only the fixed same-origin offer and store resources", async func
   });
 
   assert.deepEqual(aUrls.sort(), ["data/offers/optimizer-ready.json", "data/stores.json"]);
+});
+
+test("requires a supported document source even for empty snapshots", function () {
+  [undefined, null, "", "unknown", "toString", {}, "test-fixture "].forEach(function (vSource) {
+    assert.throws(function () {
+      OfferData.filterSnapshot({
+        kind: "optimizer-ready-offers", source: vSource, offers: []
+      }, aStores, "2026-07-23");
+    }, { code: "invalid-offer-snapshot" });
+  });
+});
+
+test("accepts supported production provenance without enabling demo mode", function () {
+  const oOffer = Object.assign({}, oFixture.offers[0], { source: "lidl-pdf" });
+  const oResult = OfferData.filterSnapshot({
+    kind: "optimizer-ready-offers", source: "lidl-pdf", offers: [oOffer]
+  }, aStores, "2026-07-23");
+
+  assert.deepEqual(oResult.offers, [oOffer]);
+  assert.equal(oResult.isDemo, false);
+});
+
+test("rejects mixed fixture and production documents in both directions", async function () {
+  for (const sSource of ["lidl-pdf", "test-fixture"]) {
+    const oSnapshot = {
+      kind: "optimizer-ready-offers",
+      source: sSource,
+      offers: [
+        Object.assign({}, oFixture.offers[0], { source: "lidl-pdf" }),
+        clone(oFixture.offers[2])
+      ]
+    };
+
+    assert.throws(function () {
+      OfferData.filterSnapshot(oSnapshot, aStores, "2026-07-23");
+    }, { code: "invalid-offer-snapshot" });
+
+    const oModel = createModel();
+    await OfferModel.refresh(oModel, { fetch: createFetch(oFixture, aStores), now: "2026-07-23" });
+    await OfferModel.refresh(oModel, { fetch: createFetch(oSnapshot, aStores), now: "2026-07-23" });
+    assert.equal(oModel.getProperty("/status"), "error");
+    assert.deepEqual(oModel.getProperty("/offers"), []);
+    assert.match(oModel.getProperty("/errorMessage"), /optimizer-ready Snapshot/);
+  }
+});
+
+test("excludes missing and unsupported offer sources and wrong source-chain assignments", function () {
+  ["lidl-pdf", "test-fixture"].forEach(function (sSource) {
+    const aOffers = [undefined, null, "", "unknown", "toString", {}].map(function (vSource) {
+      return Object.assign({}, oFixture.offers[0], { source: vSource });
+    });
+    const oResult = OfferData.filterSnapshot({
+      kind: "optimizer-ready-offers", source: sSource, offers: aOffers
+    }, aStores, "2026-07-23");
+
+    assert.deepEqual(oResult.offers, []);
+    assert.equal(oResult.excludedCount, aOffers.length);
+    assert.ok(oResult.excludedReasons.every(function (sReason) {
+      return sReason === "invalid-source";
+    }));
+  });
+
+  const oResult = OfferData.filterSnapshot({
+    kind: "optimizer-ready-offers",
+    source: "lidl-pdf",
+    offers: [Object.assign({}, oFixture.offers[2], { source: "lidl-pdf" })]
+  }, aStores, "2026-07-23");
+
+  assert.deepEqual(oResult.offers, []);
+  assert.deepEqual(oResult.excludedReasons, ["source-store-mismatch"]);
 });
