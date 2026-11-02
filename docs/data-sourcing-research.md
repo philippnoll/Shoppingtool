@@ -137,7 +137,8 @@ Der interne Flyer-Endpunkt liefert JSON. Ein Testabruf fuer den Aktionsprospekt 
 
 Wichtig: Die strukturierten Produktobjekte sind nicht automatisch eine perfekte Lebensmittelliste. Viele klassische Lebensmittelangebote stehen eher in `pages[].keyWords` und `pages[].altText`, zum Beispiel Tomaten, Kartoffeln, Butter oder Maggi Fix.
 
-Das heisst: Lidl ist technisch erreichbar, aber wir brauchen sehr wahrscheinlich noch einen Lidl-spezifischen Normalizer, der aus Flyer-JSON, Seiten-Texten und eventuell PDF/Bilddaten unsere internen Angebote baut.
+Die daraus entstandene Lidl-spezifische Verarbeitung ist in der
+[End-to-End-Pipeline](#wiederholbare-end-to-end-pipeline) umgesetzt.
 
 ## Zieldatenformat Fuer Angebote
 
@@ -214,7 +215,9 @@ npm run normalize:lidl -- data/raw/offers/lidl/<timestamp>.json
 
 Das Ergebnis wird unter `data/normalized/flyers/lidl/` erzeugt und nicht versioniert. Fuer automatisierte Tests liegt nur ein kleiner, versionierter Ausschnitt echter Lidl-Felder unter `test/fixtures/`.
 
-Naechster Untersuchungsschritt: Produkt, Preis und Packungsgroesse auf einer Lebensmittel-Prospektseite korrekt einander zuordnen. Erst daraus entstehen Objekte, die der `ShoppingOptimizer` verwenden darf.
+Die Zuordnung von Produkt, Preis und Packungsgroesse uebernimmt inzwischen der
+[Kandidatenparser](#lidl-angebotskandidaten); die
+[Promotion](#promotion-und-review) prueft die Verwendbarkeit fuer den Optimizer.
 
 ## Lidl PDF Statt OCR
 
@@ -227,7 +230,7 @@ Je 500 g
 0.88
 ```
 
-Damit ist fuer Lidl vorerst keine Bild-OCR notwendig. Die neue Pipeline kann so aussehen:
+Damit ist fuer Lidl vorerst keine Bild-OCR notwendig. Der PDF-Verarbeitungspfad ist:
 
 ```text
 Flyer JSON -> PDF-URL -> PDF -> Layout-Text -> Lidl-Angebotsparser
@@ -239,7 +242,7 @@ Der lokale Rechner beziehungsweise spaeter die NAS braucht dafuer `pdftotext` au
 npm run extract:lidl-pdf -- /pfad/zum/lidl-prospekt.pdf
 ```
 
-Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der spaetere Angebotsparser bekommt fuer seine Tests nur kleine, gezielte Textausschnitte.
+Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Rohdatum von Git ausgeschlossen. Der Angebotsparser nutzt fuer seine Tests kleine, gezielte Fixtures.
 
 ### Textpositionen Aus Der PDF
 
@@ -262,7 +265,7 @@ Der erzeugte Text liegt unter `data/raw/offers/lidl/pdf-text/` und bleibt als Ro
 }
 ```
 
-Der spaetere Angebotsparser muss dadurch kein XML kennen. Er kann sich auf die fachliche Heuristik konzentrieren: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?
+Der Angebotsparser muss dadurch kein XML kennen. Er konzentriert sich auf die fachliche Heuristik: Welche Mengen-, Preis- und Hinweisbloecke liegen nahe bei einem Produktnamen?
 
 ## Lidl Angebotskandidaten
 
@@ -470,6 +473,28 @@ Prospekt-Uebersicht
 Aufruf, Voraussetzungen, Datumsoption und Ausgabeverzeichnisse stehen in der
 [README](../README.md#lidl-offer-pipeline).
 
+### Konfiguration
+
+`scripts/run-lidl-offer-pipeline.js` liest optionale Umgebungsvariablen:
+
+- `LIDL_OFFERS_URL` ersetzt die Discovery-URL. Neben der Prospekt-Uebersicht
+  wird direktes Flyer-JSON mit einem `flyer`-Objekt akzeptiert; auch dessen
+  Struktur und Gueltigkeit werden geprueft.
+- `LIDL_FLYER_API_URL` ersetzt den Flyer-Endpunkt. Bei Auswahl ueber JSON-LD
+  ergaenzt die Pipeline `flyer_identifier` und setzt `region_id=0`.
+- `LIDL_STORE_ID` ordnet die erzeugten Angebote einem Eintrag in
+  `data/stores.json` zu. Es waehlt keine regionale Lidl-Quelle; unbekannte
+  Markt-IDs fuehren zu Review-Eintraegen statt zu freigegebenen Angeboten.
+- `LIDL_REQUEST_TIMEOUT_MS`, `LIDL_REQUEST_MAX_ATTEMPTS` und
+  `LIDL_RETRY_DELAY_MS` steuern Netzwerk-Timeout, Versuchszahl und die Basis
+  der zwischen Versuchen steigenden Wartezeit.
+- `LIDL_DISCOVERY_CACHE_MS` steuert die maximale Wiederverwendungsdauer der
+  Discovery-Antwort.
+
+Die Standardwerte und numerischen Fallback-Regeln stehen in
+`scripts/lib/LidlOfferPipeline.js` (`createConfig`, `numberOption`) und
+`scripts/lib/HttpClient.js`.
+
 ### Artefakte Und Provenienz
 
 Die Pipeline verwendet einen stabilen Prospekt-Identifier fuer fachliche
@@ -489,8 +514,10 @@ Lokal erhalten bleiben:
 - normalisierte Flyer-Metadaten;
 - getrennte Kandidaten-, Review-, optimizer-ready- und Quality-Dateien.
 
-Die Provenienz in den erzeugten Dokumenten verweist auf Prospekt-ID,
-Quell-Dateien, URLs, Abrufzeiten, Gueltigkeitszeitraum und PDF-Hash. Damit kann
+Die von der Pipeline erzeugten Flyer-, Kandidaten-, Review- und
+Optimizer-Dateien enthalten Prospekt-ID und Gueltigkeitszeitraum. Ihr
+`provenance`-Objekt auf Dokumentebene verweist auf Quell-Dateien, URLs,
+Abrufzeiten und PDF-Hash. Damit kann
 ein spaeterer Parserfehler gegen die damalige Quelle untersucht werden. Diese
 laufzeitgenerierten Dateien bleiben ueber `.gitignore` ausserhalb von Git;
 versioniert werden nur kleine Fixtures.
@@ -534,8 +561,19 @@ Der Lauf stoppt mit benannter Pipeline-Stufe bei:
 - unlesbaren Marktstammdaten oder einem Promotionfehler.
 
 Die bereits gespeicherten Rohartefakte werden dabei nicht geloescht. Der
-Erfolgslauf erzeugt `<prospekt>.quality-report.json` mit Seitenzahl,
+Lauf ersetzt die normalisierte Flyer-Datei und die Kandidatendatei erst nach
+erfolgreicher Extraktion und erfolgreichem Parsing. Dabei werden vorherige Review-,
+Optimizer- und Quality-Dateien entfernt, bevor die Marktstammdaten gelesen
+und die Kandidaten promotet werden. Scheitert diese spaetere Stufe, bleiben
+die neuen Kandidaten erhalten, aber die drei Ergebnisdateien fehlen. Ein
+Abbruch ist daher kein vollstaendiger neuer Snapshot; die Dateien werden
+einzeln atomar geschrieben, nicht als gemeinsamer Satz.
+
+Der Erfolgslauf erzeugt `<prospekt>.quality-report.json` mit Seitenzahl,
 Kandidatenzahl, Match-Arten, Trefferzahl, Promotionszahl, Review-Gruenden,
 Warnungen, Wiederverwendungsstatus sowie den wichtigsten Quell- und
-Ausgabepfaden. Die automatisierten Tests verwenden lokale Fixtures und ein
+Ausgabepfaden. Abweichende Seitenzahlen, keine Kandidaten oder keine
+freigegebenen Angebote werden als Warnungen im erfolgreichen Bericht
+gemeldet; `status: "completed"` garantiert somit keine nutzbaren Angebote.
+Die automatisierten Tests verwenden lokale Fixtures und ein
 injiziertes Fake-Netzwerk; `npm test` braucht daher keine Lidl-Verfuegbarkeit.
