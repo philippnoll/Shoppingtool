@@ -601,10 +601,11 @@ Projektzeile `aldi-nord-epe` nennt keine Strasse; der offizielle Finder markiert
 keinen dieser vier Eintraege ausdruecklich als Epe. Die exakte Filialadresse
 bleibt deshalb unbestaetigt.
 
-Der Adapter ordnet die von der Projektkohorte ausgewaehlte Zeile
-`ALDI Nord Epe` dem **ALDI-Nord-Kettenangebot** zu, weil Kette und PLZ
-uebereinstimmen. Er behauptet weder filialspezifische Verfuegbarkeit noch
-Lagerbestand. `sourceScope: "aldi-nord-chain"` und
+Der Adapter ordnet die feste Projektzeile `aldi-nord-epe` / `ALDI Nord Epe`
+dem **ALDI-Nord-Kettenangebot** zu und prueft die Kettenzugehoerigkeit.
+Die PLZ wird als Projektmetadatum ausgegeben, ist aber kein Filter oder
+Regionalitaetsnachweis der Angebotsquelle. Er behauptet weder filialspezifische
+Verfuegbarkeit noch Lagerbestand. `sourceScope: "aldi-nord-chain"` und
 `localApplicability.storeLevelStockKnown: false` bleiben in den Dateien
 sichtbar. Es ist ein ALDI-Nord-Kettenpreis, der anhand der bestehenden
 Projektzuordnung dem lokalen Vergleichsmarkt zugeordnet wird; andere Filial-IDs
@@ -613,7 +614,7 @@ in der nicht adressgenau identifizierten Epe-Filiale noch vorrätig ist. Bei ein
 ALDI-seitigen Filialfilter muss die Zuordnung enger werden; eine deutschland-
 oder haendleruebergreifende Preis-Uebertragung findet nicht statt.
 
-Die Roh-Snapshots und `evidence.json` liegen lokal unter
+Die Roh-Snapshots und `evidence.json` des Discovery-Spikes liegen lokal unter
 `data/raw/offers/aldi-nord/discovery/` und sind von Git ausgeschlossen. Die
 kleine versionierte Fixture `test/fixtures/aldi-nord-current-offers.json`
 enthaelt nur die fuer Parsing und Pruefung noetigen, aus diesem echten Abruf
@@ -671,20 +672,31 @@ strengen Packungs-/Bedingungspruefung beabsichtigt.
 
 ### Ausfuehrung Und Tests
 
+Der Standardaufruf steht in [README.md](../README.md#current-scope).
+Zusaetzliche Optionen:
+
 ```bash
-npm run fetch:aldi-nord-offers
 npm run fetch:aldi-nord-offers -- --refresh
 npm run fetch:aldi-nord-offers -- --as-of 2026-11-02
 ```
 
-Der erste Aufruf verwendet einen intakten, validierten Rohabruf bis zu sechs
-Stunden wieder. `--refresh` erzwingt genau einen neuen Seitenabruf. Netzwerk-
-Requests haben 15 Sekunden Timeout, maximal zwei Retries mit begrenztem
+Ohne `--refresh` wird ein intakter, validierter Rohabruf bis zu sechs Stunden
+wiederverwendet. `--refresh` umgeht den Cache; auch dann gelten die
+Retry-Grenzen. `--as-of` setzt nur den Pruefstichtag fuer den verwendeten
+Snapshot, laedt aber keine historischen Angebote. Ohne diese Option gilt das
+heutige Datum in `Europe/Berlin`.
+
+Netzwerkanfragen haben 15 Sekunden Timeout, maximal zwei Retries mit begrenztem
 Backoff; 4xx ausser 429 werden nicht wiederholt. Roh-HTML und SHA-256-Metadaten
-bleiben fuer Reproduzierbarkeit erhalten. Kandidaten-, Review- und
+bleiben unter `data/raw/offers/aldi-nord/` fuer Reproduzierbarkeit erhalten.
+Jede Ergebnisdatei verweist mit `sourceSnapshot` auf Rohdateipfad, Hash und
+Cache-Wiederverwendung. Kandidaten-, Review- und
 optimizer-ready JSON liegen unter `data/normalized/offers/aldi-nord/` und
-werden nicht versioniert. Geaenderte Seitenstrukturen enden mit einer
-konkreten Fehlermeldung und der Rohantwort bleibt zur Analyse erhalten.
+werden nicht versioniert. Die Review-Datei enthaelt den Status und die
+Pruefgruende aller Kandidaten, einschliesslich der freigegebenen Eintraege;
+nur die optimizer-ready Datei enthaelt ausschliesslich sichere Angebote.
+Geaenderte Seitenstrukturen enden mit einer konkreten Fehlermeldung; die
+Rohantwort bleibt zur Analyse erhalten.
 
 Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
 HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,

@@ -7,6 +7,8 @@ an initial store/split optimizer. The repeatable Lidl flyer pipeline discovers
 the relevant action flyer, preserves its raw source and PDF, extracts positioned
 text, matches conservative product names and promotes only valid,
 unconditional offers into an optimizer-ready format.
+ALDI Nord also has an end-to-end retrieval command. Persistence remains
+planned work.
 
 The full project status, decisions and ordered implementation plan live in
 [ROADMAP.md](ROADMAP.md).
@@ -47,15 +49,18 @@ npx ui5 serve --port 8080
 - Single-store and split-shopping optimization with mock offers.
 - Configurable extra-store penalty, currently 7 EUR.
 - Lidl flyer discovery, normalization, PDF extraction and raw offer parsing.
-- Separate promotion/review stage with validity, confidence and Lidl Plus
-  checks.
 - One end-to-end Lidl command with bounded retries, safe artifact reuse,
   provenance and a quality report.
-
 - ALDI Nord current-offer acquisition, conservative normalization, review and
   optimizer-ready output for the ALDI Nord Epe store entry.
-- Separate retailer promotion/review stages with validity and conditional-price
-  checks; ALDI Nord chain offers do not claim store-level stock.
+- Separate retailer promotion/review stages with validity, confidence and
+  conditional-price checks, including Lidl Plus; ALDI Nord chain offers do not
+  claim store-level stock.
+
+Retrieve ALDI Nord offers with `npm run fetch:aldi-nord-offers`. Output files,
+options and the limits of the local store mapping are documented in
+[data sourcing research](docs/data-sourcing-research.md#aldi-nord-discovery-und-adapter).
+The UI continues to use mock offers.
 
 ## Lidl Offer Pipeline
 
@@ -94,7 +99,7 @@ For artifact identity, provenance, reuse rules and failure handling, see
 ## Documentation
 
 - [Project status and roadmap](ROADMAP.md)
-- [Data sourcing and Lidl research](docs/data-sourcing-research.md)
+- [Data sourcing and retailer research](docs/data-sourcing-research.md)
 - [UI5 learning notes](docs/ui5-basics.md)
 
 ## Next Milestone
@@ -102,3 +107,6 @@ For artifact identity, provenance, reuse rules and failure handling, see
 Connect the optimizer-ready Lidl output to the UI5 model and view in small,
 explained learning steps, without treating flyer offers as complete shelf
 prices.
+
+See the [ordered implementation plan](ROADMAP.md#roadmap) for the remaining
+UI integration and retailer adapters.
