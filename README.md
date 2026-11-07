@@ -2,13 +2,12 @@
 
 Private OpenUI5 shopping-list and grocery optimization project.
 
-The current app combines a practical checklist, fuzzy product recognition and
-an initial store/split optimizer. The repeatable Lidl flyer pipeline discovers
-the relevant action flyer, preserves its raw source and PDF, extracts positioned
-text, matches conservative product names and promotes only valid,
-unconditional offers into an optimizer-ready format.
-ALDI Nord also has an end-to-end retrieval command. Persistence remains
-planned work.
+The current app combines a practical checklist, fuzzy product recognition,
+and a single-store/split optimizer using published, validated offer snapshots.
+The Lidl pipeline discovers flyers, preserves source files, extracts positioned
+PDF text, matches product names and promotes only valid unconditional offers.
+ALDI Nord also has a current-offer retrieval and review pipeline. Persistence
+remains planned work.
 
 The full project status, decisions and ordered implementation plan live in
 [ROADMAP.md](ROADMAP.md).
@@ -46,7 +45,9 @@ npx ui5 serve --port 8080
 - Local `JSONModel`, no persistence.
 - Free-text shopping input with quantities and fuzzy product recognition.
 - Editable checklist items with purchased state.
-- Single-store and split-shopping optimization with mock offers.
+- Single-store and split-shopping optimization using current, validated offer snapshots.
+- Separate loading, empty, request-error and retry states for offer data.
+- Offer-only subtotals with explicit coverage and missing-unit explanations.
 - Configurable extra-store penalty, currently 7 EUR.
 - Lidl flyer discovery, normalization, PDF extraction and raw offer parsing.
 - One end-to-end Lidl command with bounded retries, safe artifact reuse,
@@ -60,7 +61,7 @@ npx ui5 serve --port 8080
 Retrieve ALDI Nord offers with `npm run fetch:aldi-nord-offers`. Output files,
 options and the limits of the local store mapping are documented in
 [data sourcing research](docs/data-sourcing-research.md#aldi-nord-discovery-und-adapter).
-The UI continues to use mock offers.
+The UI consumes locally published optimizer-ready snapshots.
 
 ## Lidl Offer Pipeline
 
@@ -102,11 +103,19 @@ For artifact identity, provenance, reuse rules and failure handling, see
 - [Data sourcing and retailer research](docs/data-sourcing-research.md)
 - [UI5 learning notes](docs/ui5-basics.md)
 
-## Next Milestone
+## Publish Local Offer Snapshots
 
-Connect the optimizer-ready Lidl output to the UI5 model and view in small,
-explained learning steps, without treating flyer offers as complete shelf
-prices.
+Before a backend exists, publish generated optimizer-ready JSON into the fixed
+same-origin resources consumed by the app. Candidate and review documents are
+refused; generated app data is ignored by Git.
 
-See the [ordered implementation plan](ROADMAP.md#roadmap) for the remaining
-UI integration and retailer adapters.
+```bash
+npm run promote:lidl-offers -- \
+  data/normalized/offers/lidl/<prospekt>.candidates.json
+npm run publish:offers -- \
+  data/normalized/offers/lidl/<prospekt>.optimizer-ready.json
+```
+
+The publisher exposes only the browser contract fields and omits private source
+provenance. Publish before `npm run build` for static builds. See [the offer data
+flow and limitations](docs/data-sourcing-research.md#ui5-angebotssnapshots-ohne-backend).

@@ -85,7 +85,8 @@ Save final purchase list and prices
 - `webapp/model/ProductCatalog.js`: product catalog.
 - `webapp/model/ProductSearch.js`: MiniSearch wrapper.
 - `webapp/model/ProductRecognition.js`: free-text recognition.
-- `webapp/model/ShoppingOptimizer.js`: offer matching, single-store comparison, split recommendation, and extra-store heuristic.
+- `webapp/model/ShoppingOptimizer.js`: offer matching, single-store comparison, split recommendation, coverage explanations, and extra-store heuristic.
+- `webapp/model/OfferData.js` and `OfferModel.js`: fixed-resource loading, validation, filtering, and offer-model state.
 - `docs/ui5-basics.md`: learning notes for the user.
 - `docs/data-sourcing-research.md`: scraper research, data flow, source limitations, and normalization decisions.
 - `scripts/discover-lidl-offers.js`: downloads and analyzes Lidl source data.
@@ -99,6 +100,7 @@ Save final purchase list and prices
 - `scripts/promote-lidl-offers.js`: re-runs promotion for an existing candidate file.
 - `scripts/run-lidl-offer-pipeline.js`: runs the complete, repeatable Lidl pipeline.
 - `scripts/lib/LidlOfferPipeline.js`: orchestrates retrieval, artifact reuse, extraction, parsing, promotion, and quality reporting.
+- `scripts/publish-offers.js`: publishes optimizer-ready output to ignored static app resources without a backend.
 - `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
 ## Current Scraper State
@@ -133,6 +135,8 @@ The Lidl source investigation established:
 - `parse:lidl-offers` now creates candidate, review, and optimizer-ready files in one run; `promote:lidl-offers` can reprocess an existing candidate file.
 - Pipeline provenance, artifact reuse and failure handling are documented in [the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
 - The next product step is documented in [Phase 4 of the roadmap](ROADMAP.md#phase-4-echte-angebote-in-die-ui5-app-einbinden).
+- The UI now loads only published optimizer-ready snapshots through the separate `offers` JSONModel; see `docs/data-sourcing-research.md` for the fixed resource contract and unit/coverage limitations.
+- The next infrastructure step remains Phase 3: orchestrate discovery, download, extraction, parsing, promotion, and quality reporting.
 
 ## Verified Commands
 
@@ -148,10 +152,10 @@ npm run build
 
 ## Next Useful Steps
 
-- Return to slow, interactive teaching when the normalized offers are connected to the UI5 `JSONModel`, controller, XML view, and bindings.
-- For running the Lidl pipeline, see [the README](README.md#lidl-offer-pipeline).
+- Continue the Lidl and ALDI infrastructure with reproducible source artifacts, bounded retries, explicit failures, and optimizer-ready output separate from review data.
+- Continue UI5 changes incrementally; offer snapshots now flow through a separate model into the optimizer and view.
+- For the Lidl pipeline, see [the README](README.md#lidl-offer-pipeline). Treat `ROADMAP.md` as the authoritative ordered handoff, including retailer progress in Phase 5; source limitations and adapter operations belong in `docs/data-sourcing-research.md`.
 - Recipe book, weekly recipe planning, persistence, and NAS hosting remain later phases.
-- Treat `ROADMAP.md` as the authoritative ordered handoff for future work, including retailer progress in Phase 5. Source limitations and adapter operations belong in `docs/data-sourcing-research.md`.
 
 ## Maintaining this file
 

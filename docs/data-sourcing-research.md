@@ -702,3 +702,102 @@ Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
 HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
 Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
 Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
+Bekannte Mengengrenze: Einige Katalogprodukte haben noch die Standardmenge
+`Stk`, waehrend reale Angebote in `g` vorliegen. Die UI und der Optimizer
+behandeln diese Einheiten als inkompatibel und zeigen das Angebot als nicht
+abgedeckt. Die Einkaufslistenmenge und -einheit lassen sich weiterhin explizit
+bearbeiten. Es wird kein Gewicht pro Stueck erfunden.
+
+## UI5-Angebotssnapshots Ohne Backend
+
+Die App liest nur zwei feste same-origin-URLs:
+
+```text
+data/stores.json
+data/offers/optimizer-ready.json
+```
+
+Vor dem Backend macht `npm run publish:offers -- <optimizer-ready-json>` einen
+lokalen, kontrollierten Snapshot fuer UI5 verfuegbar. Beispiel mit den
+Ergebnissen der vorhandenen Phase-2-Kommandos:
+
+```bash
+npm run promote:lidl-offers -- \
+  data/normalized/offers/lidl/<prospekt>.candidates.json
+npm run publish:offers -- \
+  data/normalized/offers/lidl/<prospekt>.optimizer-ready.json
+npm run serve -- --port 8080
+```
+
+Der Publisher verweigert Kandidaten- und Review-Dokumente. Er kopiert nur
+`kind: "optimizer-ready-offers"` in den festen `webapp/data/`-Pfad und stellt
+die kuratierte `data/stores.json` dort als Marktregister bereit. `webapp/data/`
+ist von Git ausgeschlossen. Fuer einen statischen Produktionsbuild muss vor
+`npm run build` publiziert werden; beim Wechsel des Prospekts denselben Befehl
+mit dem neuen optimizer-ready Ergebnis erneut ausfuehren. Wenn ein zuvor
+veroeffentlichter Snapshot entfernt werden soll, zuerst den generierten
+`dist/`-Ordner bereinigen, damit kein altes Asset liegen bleibt. Die App kann keine
+beliebige lokale Datei lesen und benoetigt keinen lokalen Dateipfad.
+
+Der Datenfluss ist:
+
+```text
+Optimizer-ready Snapshot + Marktregister
+  -> publish:offers
+  -> feste same-origin JSON-Ressourcen
+  -> OfferData: Dokumentform und jedes Angebot pruefen/filtern
+  -> separates JSONModel "offers"
+  -> App-Controller / ShoppingOptimizer
+  -> View: Lade-/Leer-/Fehlerzustand, Abdeckung und fehlende Artikel
+```
+
+Der Publisher projiziert die Snapshot-Metadaten und Angebote auf die festgelegten
+Browser-Vertragsfelder. Unbekannte Felder wie `provenance`, absolute
+`sourceFile`-Pfade und interne Rohdaten bleiben in den lokalen Quelldateien und
+gelangen nicht nach `webapp/data/`.
+
+Die App laedt den Snapshot beim Start, beim Wechsel auf den sichtbaren Tab und
+am UTC-Datumswechsel erneut. Dabei werden die sichtbaren Angebotsdaten und ein
+bisheriges Optimierungsergebnis zuerst verworfen, damit abgelaufene Preise nicht
+als aktuell stehen bleiben.
+
+Die Laufzeitpruefung verwirft Angebote mit unbekannter Markt-ID oder nicht
+passendem Marktname/Kette, nicht-positivem Preis bzw. Packungsmass,
+ungueltiger Einheit oder Gueltigkeit, abgelaufenem/zukuenftigem Zeitraum oder
+einer Preisbedingung. Fuer allgemein verfuegbare Angebote muessen
+`priceType: "offer"` und `priceCondition: null` gesetzt sein. Die Datumsgrenzen
+sind inklusive und werden wie in der Promotion anhand des UTC-Kalendertags
+geprueft. Fuer weitere Haendler gilt derselbe Vertragsweg; nur deren
+Quelladapter, die erlaubte Quellen-/Kettenzuordnung in `OfferData` und Eintraege
+im Marktregister kommen spaeter hinzu. Dokumente brauchen eine unterstuetzte
+Quelle (`lidl-pdf` oder fuer absichtliche Tests `test-fixture`). Fehlende oder
+unbekannte Angebotsquellen und Angebote einer unpassenden Haendlerquelle werden
+ausgeschlossen. Dokumente mit gemischten Echt-/Testdatenquellen werden komplett
+abgewiesen; der Demo-Status stammt aus der geprueften Dokumentquelle.
+
+Der Optimizer bekommt ausschliesslich gefilterte Angebote. Eine Angebots-
+Teilsumme umfasst nur abgedeckte Artikel und wird in der UI nie als kompletter
+Regalpreis-Warenkorb bezeichnet. Ein fehlendes Angebot wird von einer
+inkompatiblen Einheit unterschieden. Beispielsweise bleibt `1 Stk` Butter bei
+einem `250 g`-Angebot ungedeckt; die UI zeigt die verfuegbare Angebotsmenge und
+weist auf die explizite Mengen-/Einheitenbearbeitung hin, statt Stueckgewicht
+zu schaetzen. Wenn Einzelladen und Split unterschiedliche Artikel abdecken,
+zeigt die App keine scheinbare Ersparnis zwischen den ungleichen Teilsummen.
+Mock-Angebote bleiben ausschliesslich als bestehende Optimizer-Test-Fixture
+erhalten. Das UI-Fixture `test/fixtures/optimizer-ready-offers.json` kann fuer
+einen absichtlichen Browser-Smoke-Test veroeffentlicht werden; es setzt den
+Snapshot-Marker `source: "test-fixture"`, und die UI zeigt dafuer sichtbar
+`TESTDATEN – keine echten oder aktuellen Angebote`. Dieses Fixture niemals fuer
+einen echten Einkauf oder Produktionsbuild verwenden.
+
+Ohne veroeffentlichten Snapshot zeigt die App einen retrybaren Ladefehler. Ein
+formal gueltiger Snapshot ohne aktuell gueltige, unbedingte Angebote zeigt den
+Leerzustand. Die Aktualisieren-Schaltflaeche laedt die gleichen festen URLs
+mit Cache-Bypass; sie startet keinen Scraper. Jeder Refresh ueber den Controller,
+auch beim Tageswechsel vor der Optimierung, verwirft das bisherige Ergebnis
+sofort, bevor der neue Ladevorgang beginnt. Die App erfindet keine
+aktuellen Angebote, wenn die Daten fehlen oder abgelaufen sind. Der im Repository dokumentierte historische Prospekt hatte 8 optimizer-ready
+Angebote am 23.07.2026, war aber am 26.07.2026 bereits abgelaufen. Ein aktueller
+Live-Preisresultat-Test erfordert daher einen neu verarbeiteten und
+publizierten Prospekt. Das versionierte Test-Fixture ist nur fuer deterministische
+Tests und sichtbar gekennzeichnete Browser-Smoke-Tests da.

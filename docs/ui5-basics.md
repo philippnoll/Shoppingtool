@@ -324,22 +324,17 @@ splitPlan = guenstigste Artikelverteilung ueber mehrere Laeden
 stores    = bewertete Laeden mit Treffern, fehlenden Artikeln und Preis
 ```
 
-Das Ergebnisobjekt ist auch ohne Optimierung schon im Model vorhanden:
+Vor der ersten Optimierung liegt im Einkaufslistenmodell nur ein Sichtbarkeits-
+Flag:
 
 ```js
 optimizationResult: {
-  hasResult: false,
-  bestStore: {
-    storeName: "",
-    totalPrice: 0,
-    matchedItems: [],
-    missingItems: []
-  },
-  stores: []
+  hasResult: false
 }
 ```
 
-Dadurch hat die View stabile Binding-Pfade. Sie kann also immer auf `/optimizationResult/bestStore/missingItems` binden, ohne dass `bestStore` zwischendurch `null` ist.
+Die View zeigt das Ergebnis-Panel erst, wenn der Controller ein vollstaendiges
+Optimizer-Ergebnis in `/optimizationResult` setzt.
 
 Die Optimierung hat jetzt zwei Blickwinkel:
 
@@ -351,9 +346,13 @@ splitPlan
   pro Artikel das guenstigste passende Angebot ueber alle Laeden
 ```
 
-Der Split ist noch eine reine Preisrechnung. Zeitkosten, Fahrtkosten und eine Strafe fuer mehrere Laeden kommen spaeter als Heuristik dazu.
+Der Split vergleicht die Angebotssummen und beruecksichtigt eine konfigurierbare Strafe fuer zusaetzliche Laeden. Sie bildet Umweg, Fahrzeugkosten, Zeit und Aufwand als einfache Heuristik ab; die Details stehen in `ROADMAP.md`.
 
-Wichtig: `offers` kommt aktuell aus `MockOffers.js`. Das ist absichtlich so geschnitten, dass spaeter Scraper-Daten oder Bon-Daten im gleichen Format liefern koennen.
+Angebote kommen jetzt aus einem getrennten benannten JSONModel `offers`, nicht
+mehr aus dem Einkaufslistenmodell. `OfferModel` laedt einen veroeffentlichten
+optimizer-ready Snapshot und stellt `status`, `loading`, `offers` und einen
+Fehlertext bereit. `MockOffers.js` bleibt nur als Test-Fixture fuer den
+Optimizer; es ist keine Produktionsquelle.
 
 Der Optimizer kann einfache kompatible Einheiten vergleichen:
 
@@ -373,14 +372,28 @@ l  -> ml
 Das ist noch keine komplette Bon-Logik. Pfand, Rabatte, Kilopreise und gewichtete Bon-Positionen kommen spaeter als eigene Schritte.
 
 ```text
-MockOffers jetzt
+optimizer-ready Snapshot
+        |
+        v
+OfferData prueft Gueltigkeit, Markt und Bedingungen
+        |
+        v
+benanntes JSONModel "offers"
         |
         v
 ShoppingOptimizer
-        ^
-        |
-Scraper-Daten spaeter
 ```
+
+Vor dem Backend kopiert `npm run publish:offers -- <optimizer-ready-json>`
+die freigegebene Datei in einen festen, von Git ausgeschlossenen
+`webapp/data/`-Pfad. Die View bekommt keine lokalen Dateipfade. Details und
+Grenzen stehen in `docs/data-sourcing-research.md`.
+
+Der Optimizer zeigt jetzt explizit die Abdeckung. `totalPrice` ist eine
+Angebotssumme nur fuer gefundene Listenartikel, kein vollstaendiger Regalpreis-
+Warenkorb. `Stk` wird nicht in `g` umgerechnet; inkompatible Einheiten bleiben
+als fehlende Abdeckung sichtbar. Eine Ersparnis zwischen Einzelladen und Split
+wird nur verglichen, wenn beide denselben Artikelsatz abdecken.
 
 Der Controller macht nur die Verbindung zur UI:
 

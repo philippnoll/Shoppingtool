@@ -88,21 +88,27 @@ sparsam und nachvollziehbar abgerufen werden.
 - Die Produkterkennung ist als Fachlogik vom UI5-Controller getrennt und wird
   mit Node-Tests ueber einen kleinen UI5-Modul-Loader getestet.
 
-### 4. Einkaufsoptimierung Mit Mock-Daten
+### 4. Einkaufsoptimierung
 
 - `ShoppingOptimizer.js` vergleicht Angebote anhand von `productKey` und
   kompatiblen Einheiten.
-- Gramm/Kilogramm und Milliliter/Liter werden auf Basiseinheiten umgerechnet.
+- Gramm/Kilogramm und Milliliter/Liter werden auf Basiseinheiten umgerechnet;
+  Stueck bleibt inkompatibel mit Gewicht und Volumen.
 - Benoetigte Packungsanzahlen werden mit `Math.ceil` aufgerundet.
-- Einzelne Laeden werden zuerst nach fehlenden Artikeln, danach nach
-  Gesamtpreis sortiert.
-- Eine Split-Empfehlung kann pro Artikel das guenstigste Angebot aus mehreren
-  Laeden kombinieren.
-- Jeder zusaetzliche Laden bekommt aktuell standardmaessig eine Strafe von
+- Einzelne Laeden werden zuerst nach Abdeckung, danach nach Angebotssumme
+  sortiert.
+- Eine Split-Empfehlung kann pro Artikel das guenstigste passende Angebot aus
+  mehreren Laeden kombinieren.
+- Jeder zusaetzliche Laden bekommt weiterhin standardmaessig eine Strafe von
   7 EUR. Sie repraesentiert Umweg, Fahrzeugkosten, Zeit und Aufwand.
-- Die UI zeigt den besten Einzelladen, den Split-Preis, die reine Ersparnis und
-  die effektive Ersparnis nach Zusatzladen-Strafe.
-- Die Angebote stammen derzeit noch aus `MockOffers.js`.
+- Einzelladen und Split zeigen abgedeckte Artikel, fehlende Angebote und
+  inkompatible Einheiten. Teilsummen werden nicht als vollstaendige
+  Regalpreis-Warenkoerbe bezeichnet.
+- Eine Ersparnis wird nur ausgewiesen, wenn Einzelladen und Split dieselben
+  Artikel abdecken.
+- Produktionsdaten kommen ueber das getrennte Offer-Model aus einem
+  veroeffentlichten optimizer-ready Snapshot. `MockOffers.js` bleibt eine
+  Test-Fixture.
 
 ### 5. Lokale Maerkte
 
@@ -211,19 +217,23 @@ Lidl-Prospekt
   -> optimizer-ready JSON
 ```
 
-Die UI5-App verwendet weiterhin `MockOffers.js`:
+Die UI5-App laedt inzwischen optimizer-ready Snapshots in das getrennte
+UI5-Model `offers`:
 
 ```text
-Einkaufsliste
-  -> ProductRecognition
-  -> item.productKey
-  -> ShoppingOptimizer
-  -> MockOffers
+Lidl-Pipeline / gemeinsamer Retailer-Vertrag
+  -> optimizer-ready JSON
+  -> npm run publish:offers (feste same-origin Ressourcen)
+  -> OfferData prueft Markt, Preis, Einheit, Gueltigkeit und Bedingung
+  -> benanntes JSONModel "offers"
+  -> Controller / ShoppingOptimizer
+  -> View zeigt Angebotssummen, Abdeckung und fehlende Artikel
 ```
 
-Das optimizer-ready JSON wird erst in Phase 4 kleinschrittig in das UI5-Model
-eingebunden. Lidl-Plus-Preise werden bis zu einer expliziten Nutzeroption nicht
-an den Optimizer weitergegeben.
+`MockOffers.js` ist nicht mehr mit der Produktions-App verbunden und bleibt
+nur als bestehende Optimizer-Test-Fixture erhalten. Rohkandidaten und Review-
+Dateien werden vom Publisher abgewiesen und nie fuer den Browser bereitgestellt.
+Lidl-Plus-Preise werden wegen ihrer Bedingung ausgeschlossen.
 
 ## Wichtige Datenvertraege
 
@@ -414,30 +424,49 @@ fachlichen Zahlen.
 
 ### Phase 4: Echte Angebote In Die UI5-App Einbinden
 
-Ziel: Die bisherige Optimierungsansicht arbeitet mit real normalisierten
-Lidl-Daten statt nur mit `MockOffers.js`.
+Status: umgesetzt gegen den Phase-2 optimizer-ready-Vertrag; Phase 3 ist
+weiterhin unabhaengig offen.
 
-Diese Phase ist wieder eine UI5-Lernphase und wird kleinschrittig umgesetzt.
+Die App liest zwei feste same-origin-Ressourcen: `data/stores.json` und
+`data/offers/optimizer-ready.json`. `npm run publish:offers -- <optimizer-ready-json>`
+kopiert ausschliesslich diese Snapshot-Art plus die gepflegte Marktregistrierung
+nach `webapp/data/`; die erzeugten Dateien sind von Git ausgeschlossen. Es gibt
+keinen Browserzugriff auf beliebige lokale Dateipfade und keinen Backend-Zwang.
 
-Arbeitspakete:
+`OfferData.js` prueft die Dokumentform und filtert jedes Angebot anhand
+bekannter Markt-ID, Marktname und Kette, positiver Zahl fuer Preis und
+Packungsmenge, unterstuetzter Einheit, Gueltigkeitsbereich und explizit
+unbedingtem Preis (`priceType: "offer"`, `priceCondition: null`). Unbekannte,
+ungueltige, zukuenftige, abgelaufene und Kundenkarten-Angebote gelangen nicht
+zum Optimizer. Die gemeinsame Vertragsform bleibt Haendler-neutral.
 
-1. Festlegen, wie die App Angebotsdaten laedt, bevor das Backend existiert.
-2. Angebotsdaten in ein benanntes oder klar abgegrenztes UI5-Model laden.
-3. Lade-, Leer- und Fehlerzustand in der XML View anzeigen.
-4. Nur aktuell gueltige und fuer den gewaehlten Markt passende Angebote
-   optimieren.
-5. Mock-Angebote als Testdaten behalten, aber nicht als produktive Quelle
-   behandeln.
-6. Sichtbar machen, welche Einkaufsartikel nicht durch echte Angebote
-   abgedeckt sind.
+`OfferModel.js` haelt Lade-, Leer-, Fehler- und Erfolgszustand getrennt vom
+Einkaufslistenmodell. Die UI bietet Aktualisieren/Erneut laden. Der Optimizer
+zeigt abgedeckte und fehlende Artikel; Stk wird nicht in Gewicht oder Volumen
+umgerechnet. Angebots-Teilsummen werden ausdruecklich nicht als vollstaendiger
+Regalpreis-Warenkorb bezeichnet. Ersparnisse zwischen Einzelladen und Split
+werden nur bei identischer Artikelabdeckung verglichen. Die Zusatzladen-Strafe
+bleibt bei 7 EUR.
 
-Akzeptanzkriterien:
+Verifiziert: 55 Node-Tests fuer Gueltigkeitsgrenzen, falsche Maerkte,
+ungueltige Preise/Mengen/Einheiten, bedingte Preise, leere Snapshots,
+Anfragefehler und Retry, inkompatible Einheiten, Teilabdeckung und bestehendes
+Listen-/Optimizer-Verhalten; Lint und UI5-Produktionsbuild erfolgreich. Der
+Browser-Smoke-Test wurde am 02.11.2026 mit dem isolierten Chrome/AXI-Setup und
+dem sichtbar markierten UI-Fixture abgeschlossen (kein Live-Preisresultat):
+Laden, Freitexterkennung mit vier Eintraegen, editierbare Mengen/Einheiten,
+TESTDATEN-Warnung, 1/4 Einzelladen- und 2/4 Split-Abdeckung, Teilsummen,
+250-g-Angebot gegen 1 Stk sowie der Verzicht auf ungleiche Ersparnisvergleiche
+waren sichtbar. Aktualisieren blendete das alte Optimierungsergebnis sofort aus
+und lud das gekennzeichnete Fixture erneut. Der Browser deckte ausserdem einen
+Syntaxfehler in beiden Coverage-Textbindungen auf; dieser wurde durch den
+Pipeline-Fix und Regressionstests behoben. Im anschliessenden Lauf gab es keine
+Binding-Syntaxfehler; zwei MessageToast-Dock-Diagnosen erschienen nach der
+Erkennung, waehrend die UI weiterlief. Ein aktuelles Live-Preisresultat
+erfordert weiterhin einen neu verarbeiteten und publizierten Prospekt.
 
-- Der Datenweg Quelle -> Model -> Controller -> Optimizer -> View ist
-  gemeinsam erklaert und verstanden.
-- Die UI behauptet nicht, ein kompletter Warenkorbpreis sei bekannt, wenn nur
-  Angebotsartikel vorliegen.
-- Abgelaufene Angebote werden nicht angezeigt oder berechnet.
+Ablauf und Grenzen sind in `README.md` sowie
+`docs/data-sourcing-research.md#ui5-angebotssnapshots-ohne-backend` dokumentiert.
 
 ### Phase 5: Weitere Haendler Der Ersten Kohorte
 
