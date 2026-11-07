@@ -96,10 +96,17 @@ Outputs stay outside Git:
 For artifact identity, provenance, reuse rules and failure handling, see
 [the pipeline reference](docs/data-sourcing-research.md#wiederholbare-end-to-end-pipeline).
 
+## K+K Offer Capture
+
+Run the current K+K catalog adapter with `npm run parse:kk-offers`. Source
+details, output files and the explicit store-selection limitation are covered
+in the [K+K source and adapter reference](docs/kk-offers-research.md).
+
 ## Documentation
 
 - [Project status and roadmap](ROADMAP.md)
 - [Data sourcing and retailer research](docs/data-sourcing-research.md)
+- [K+K source and adapter research](docs/kk-offers-research.md)
 - [UI5 learning notes](docs/ui5-basics.md)
 
 ## Next Milestone

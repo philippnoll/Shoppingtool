@@ -702,3 +702,8 @@ Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
 HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
 Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
 Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
+
+## K+K
+
+K+K source research, parser boundaries and adapter operations are maintained
+in the [K+K source and adapter reference](kk-offers-research.md).

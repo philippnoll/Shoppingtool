@@ -11,6 +11,7 @@
     "extract:lidl-pdf": "node scripts/extract-lidl-pdf-text.js",
     "normalize:lidl": "node scripts/normalize-lidl-flyer.js",
     "parse:lidl-offers": "node scripts/parse-lidl-offers.js",
+    "parse:kk-offers": "node scripts/parse-kk-offers.js",
     "promote:lidl-offers": "node scripts/promote-lidl-offers.js",
     "pipeline:lidl": "node scripts/run-lidl-offer-pipeline.js",
     "fetch:aldi-nord-offers": "node scripts/fetch-aldi-nord-offers.js",

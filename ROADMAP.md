@@ -441,13 +441,15 @@ Akzeptanzkriterien:
 
 ### Phase 5: Weitere Haendler Der Ersten Kohorte
 
-Status: ALDI Nord-Adapter umgesetzt; K+K und PENNY stehen noch aus.
+Status: ALDI Nord-Adapter und erster K+K-Discovery-Adapter umgesetzt; PENNY
+steht noch aus. Der K+K-Umfang und offene Store-Zuordnung sind in der
+[K+K-Quellenreferenz](docs/kk-offers-research.md) dokumentiert.
 
 Reihenfolge:
 
 1. ALDI Nord — umgesetzt; Quellenumfang und lokale Zuordnung siehe
    [Quellenreferenz](docs/data-sourcing-research.md#quelle-und-regionalitaet).
-2. K+K
+2. K+K — erster Discovery-Adapter umgesetzt; Ausbau und Store-Zuordnung offen.
 3. PENNY
 
 Fuer jede Kette zuerst einen Discovery-Spike durchfuehren. Nicht annehmen,
@@ -472,6 +474,9 @@ Akzeptanzkriterien je Haendler:
 - Quelle und Gueltigkeitszeitraum werden gespeichert.
 - Reale Stichproben sind getestet.
 - Ausgabe kann ohne Sonderfall im `ShoppingOptimizer` verwendet werden.
+
+Der K+K-Discovery-Spike und Adapterstatus stehen in der
+[K+K-Quellenreferenz](docs/kk-offers-research.md).
 
 ### Phase 6: Persistenz, Historie Und NAS-Backend
 
