@@ -346,7 +346,7 @@ splitPlan
   pro Artikel das guenstigste passende Angebot ueber alle Laeden
 ```
 
-Der Split ist noch eine reine Preisrechnung. Zeitkosten, Fahrtkosten und eine Strafe fuer mehrere Laeden kommen spaeter als Heuristik dazu.
+Der Split vergleicht die Angebotssummen und beruecksichtigt eine konfigurierbare Strafe fuer zusaetzliche Laeden. Sie bildet Umweg, Fahrzeugkosten, Zeit und Aufwand als einfache Heuristik ab; die Details stehen in `ROADMAP.md`.
 
 Angebote kommen jetzt aus einem getrennten benannten JSONModel `offers`, nicht
 mehr aus dem Einkaufslistenmodell. `OfferModel` laedt einen veroeffentlichten

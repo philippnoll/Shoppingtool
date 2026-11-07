@@ -87,7 +87,6 @@ Save final purchase list and prices
 - `webapp/model/ProductRecognition.js`: free-text recognition.
 - `webapp/model/ShoppingOptimizer.js`: offer matching, single-store comparison, split recommendation, coverage explanations, and extra-store heuristic.
 - `webapp/model/OfferData.js` and `OfferModel.js`: fixed-resource loading, validation, filtering, and offer-model state.
-- `scripts/publish-offers.js`: publishes only optimizer-ready snapshots to ignored static app resources.
 - `docs/ui5-basics.md`: learning notes for the user.
 - `docs/data-sourcing-research.md`: scraper research, data flow, source limitations, and normalization decisions.
 - `scripts/discover-lidl-offers.js`: downloads and analyzes Lidl source data.
@@ -101,7 +100,7 @@ Save final purchase list and prices
 - `scripts/promote-lidl-offers.js`: re-runs promotion for an existing candidate file.
 - `scripts/run-lidl-offer-pipeline.js`: runs the complete, repeatable Lidl pipeline.
 - `scripts/lib/LidlOfferPipeline.js`: orchestrates retrieval, artifact reuse, extraction, parsing, promotion, and quality reporting.
-- `scripts/publish-offers.js`: makes optimizer-ready output available to the UI without a backend.
+- `scripts/publish-offers.js`: publishes optimizer-ready output to ignored static app resources without a backend.
 - `ROADMAP.md`: central project handoff, completed work, decisions, data contracts, and ordered next phases.
 
 ## Current Scraper State

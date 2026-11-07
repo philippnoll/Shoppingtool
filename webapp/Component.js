@@ -29,16 +29,16 @@ sap.ui.define([
       OfferModel.refresh(this.getModel("offers"));
       this._scheduleOfferDateRefresh();
       this._onVisibilityChange = this._onVisibilityChange.bind(this);
-      document.addEventListener("visibilitychange", this._onVisibilityChange);
+      window.document.addEventListener("visibilitychange", this._onVisibilityChange);
     },
 
     onExit: function () {
-      clearTimeout(this._offerDateRefreshTimer);
-      document.removeEventListener("visibilitychange", this._onVisibilityChange);
+      window.clearTimeout(this._offerDateRefreshTimer);
+      window.document.removeEventListener("visibilitychange", this._onVisibilityChange);
     },
 
     _onVisibilityChange: function () {
-      if (document.visibilityState === "visible") {
+      if (window.document.visibilityState === "visible") {
         this._refreshVisibleOffers();
       }
     },
@@ -47,8 +47,8 @@ sap.ui.define([
       var oNow = new Date();
       var oNextUtcDate = new Date(Date.UTC(oNow.getUTCFullYear(), oNow.getUTCMonth(), oNow.getUTCDate() + 1));
 
-      clearTimeout(this._offerDateRefreshTimer);
-      this._offerDateRefreshTimer = setTimeout(function () {
+      window.clearTimeout(this._offerDateRefreshTimer);
+      this._offerDateRefreshTimer = window.setTimeout(function () {
         this._refreshVisibleOffers();
         this._scheduleOfferDateRefresh();
       }.bind(this), oNextUtcDate.getTime() - oNow.getTime());
