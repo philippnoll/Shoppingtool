@@ -75,7 +75,20 @@ test("publishes parsed historical offers, loads fixed HTTP resources, and preser
   assert.deepEqual(fs.readdirSync(path.join(sRoot, "webapp/data/offers")), ["optimizer-ready.json"]);
   const sPublished = path.join(sRoot, "webapp/data/offers/optimizer-ready.json");
   const oApiResponse = await (await fetch(new URLCtor("data/offers/optimizer-ready.json", sOrigin))).json();
-  assert.deepEqual(oApiResponse, oDocuments.optimizer);
+  assert.deepEqual(oApiResponse, {
+    kind: oDocuments.optimizer.kind,
+    source: oDocuments.optimizer.source,
+    offerCount: oDocuments.optimizer.offerCount,
+    generatedAt: oDocuments.optimizer.generatedAt,
+    offers: oDocuments.optimizer.offers.map(function (oOffer) {
+      return Object.fromEntries([
+        "storeId", "storeName", "chain", "productKey", "offerName", "packageQuantity",
+        "packageUnit", "price", "validFrom", "validTo", "source", "priceType", "priceCondition"
+      ].filter(function (sField) { return Object.hasOwn(oOffer, sField); }).map(function (sField) {
+        return [sField, oOffer[sField]];
+      }));
+    })
+  });
   assert.doesNotMatch(JSON.stringify(oApiResponse), new RegExp(sRoot));
   await refresh("Publish parsed historical snapshot and retry");
   assert.equal(oModel.getProperty("/status"), "ready");
