@@ -55,6 +55,7 @@ async function discover(oOptions) {
   const sCatalogPath = path.join(sCatalogDirectory, "catalog.xml");
   const oCatalogResponse = await requestResource(sCatalogUrl, {
     cachePath: sCatalogPath,
+    cacheRoot: sCatalogDirectory,
     previousRecord: findPreviousRecord(oPreviousManifest, sCatalogUrl),
     expectedContentType: /xml/i,
     fetchImpl: fnFetch,
@@ -87,6 +88,7 @@ async function discover(oOptions) {
     const sPagePath = path.join(sCatalogDirectory, sRelativePagePath);
     const oPageResponse = await requestResource(sPageUrl, {
       cachePath: sPagePath,
+      cacheRoot: sCatalogDirectory,
       previousRecord: findPreviousRecord(oPreviousManifest, sPageUrl),
       expectedContentType: /text\/plain/i,
       fetchImpl: fnFetch,
@@ -116,6 +118,12 @@ async function discover(oOptions) {
     resources: aResourceRecords
   };
 
+  const sManifestContents = JSON.stringify(oManifest, null, 2) + "\n";
+  const sManifestHash = crypto.createHash("sha256").update(sManifestContents).digest("hex");
+  const sManifestName = "manifest-" + sFetchedAt.replace(/[-:.]/g, "").replace(/Z$/, "Z") +
+    "-" + sManifestHash.slice(0, 16) + ".json";
+  const sManifestPath = path.join(sCatalogDirectory, sManifestName);
+  await writeJson(sManifestPath, oManifest, true);
   await writeJson(path.join(sCatalogDirectory, "manifest.json"), oManifest);
 
   return {
@@ -127,6 +135,8 @@ async function discover(oOptions) {
     pageCount: oCatalogXml.pageCount,
     fetchedAt: sFetchedAt,
     rawDirectory: sCatalogDirectory,
+    manifestPath: sManifestPath,
+    manifestSha256: sManifestHash,
     pages: aPages,
     manifest: oManifest
   };
@@ -169,7 +179,10 @@ function parseCatalogXml(oBody) {
 async function requestResource(sUrl, oOptions) {
   const oRequestOptions = oOptions || {};
   const fnFetch = oRequestOptions.fetchImpl || globalThis.fetch;
-  const sCachePath = oRequestOptions.cachePath;
+  const sCachePath = oRequestOptions.previousRecord && oRequestOptions.previousRecord.localPath &&
+    oRequestOptions.cacheRoot
+    ? path.join(oRequestOptions.cacheRoot, oRequestOptions.previousRecord.localPath)
+    : oRequestOptions.cachePath;
   const oPreviousRecord = oRequestOptions.previousRecord || {};
   let oCachedBody = null;
 
@@ -179,6 +192,16 @@ async function requestResource(sUrl, oOptions) {
     } catch (oError) {
       if (oError.code !== "ENOENT") {
         throw oError;
+      }
+
+      if (sCachePath !== oRequestOptions.cachePath) {
+        try {
+          oCachedBody = await fs.readFile(oRequestOptions.cachePath);
+        } catch (oFallbackError) {
+          if (oFallbackError.code !== "ENOENT") {
+            throw oFallbackError;
+          }
+        }
       }
     }
   }
@@ -279,7 +302,10 @@ async function requestResource(sUrl, oOptions) {
 }
 
 async function saveResource(oResource, sCatalogDirectory, sRelativePath, sExpectedOrigin) {
-  const sLocalPath = path.join(sCatalogDirectory, sRelativePath);
+  const sDigest = crypto.createHash("sha256").update(oResource.body).digest("hex");
+  const sExtension = path.extname(sRelativePath);
+  const sImmutableRelativePath = path.join(path.dirname(sRelativePath), sDigest + sExtension);
+  const sLocalPath = path.join(sCatalogDirectory, sImmutableRelativePath);
   const oFinalUrl = new URL(oResource.finalUrl);
 
   if (oFinalUrl.protocol !== "https:" || oFinalUrl.origin !== sExpectedOrigin) {
@@ -289,7 +315,13 @@ async function saveResource(oResource, sCatalogDirectory, sRelativePath, sExpect
   await fs.mkdir(path.dirname(sLocalPath), { recursive: true });
 
   if (!oResource.reusedFromCache) {
-    await fs.writeFile(sLocalPath, oResource.body);
+    try {
+      await fs.writeFile(sLocalPath, oResource.body, { flag: "wx" });
+    } catch (oError) {
+      if (oError.code !== "EEXIST") {
+        throw oError;
+      }
+    }
   }
 
   return {
@@ -299,7 +331,7 @@ async function saveResource(oResource, sCatalogDirectory, sRelativePath, sExpect
     contentType: oResource.contentType,
     etag: oResource.etag,
     lastModified: oResource.lastModified,
-    localPath: path.relative(path.dirname(sCatalogDirectory), sLocalPath),
+    localPath: path.relative(sCatalogDirectory, sLocalPath),
     bytes: oResource.body.length,
     sha256: crypto.createHash("sha256").update(oResource.body).digest("hex"),
     reusedFromCache: oResource.reusedFromCache
@@ -366,8 +398,11 @@ function delay(iMilliseconds) {
   });
 }
 
-async function writeJson(sPath, oValue) {
-  await fs.writeFile(sPath, JSON.stringify(oValue, null, 2) + "\n", "utf8");
+async function writeJson(sPath, oValue, bImmutable, sSerialized) {
+  await fs.writeFile(sPath, sSerialized || JSON.stringify(oValue, null, 2) + "\n", {
+    encoding: "utf8",
+    flag: bImmutable ? "wx" : "w"
+  });
 }
 
 module.exports = {

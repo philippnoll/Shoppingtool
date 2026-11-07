@@ -25,7 +25,20 @@ async function main() {
     generatedAt: sGeneratedAt,
     storeIds: oArguments.storeIds
   });
-  const sOutputStem = oSource.catalogId;
+  const oSourceSnapshot = {
+    manifestPath: path.relative(process.cwd(), oSource.manifestPath),
+    manifestSha256: oSource.manifestSha256,
+    resources: oSource.manifest.resources.map(function (oResource) {
+      return {
+        localPath: oResource.localPath,
+        sha256: oResource.sha256
+      };
+    })
+  };
+  oCandidateDocument.sourceSnapshot = oSourceSnapshot;
+  oPromotionDocuments.review.sourceSnapshot = oSourceSnapshot;
+  oPromotionDocuments.optimizer.sourceSnapshot = oSourceSnapshot;
+  const sOutputStem = oSource.catalogId + "-" + oSource.manifestSha256.slice(0, 16);
   const sCandidateOutputPath = path.join(OUTPUT_DIR, sOutputStem + ".candidates.json");
   const sReviewOutputPath = path.join(OUTPUT_DIR, sOutputStem + ".review.json");
   const sOptimizerOutputPath = path.join(OUTPUT_DIR, sOutputStem + ".optimizer-ready.json");

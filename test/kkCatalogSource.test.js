@@ -46,7 +46,10 @@ test("downloads each public text page once and reuses cached bodies after 304", 
     return oPage.text;
   }), ["page one", "page two"]);
   assert.equal(aFirstRequests.length, 4);
-  assert.equal(await fs.readFile(path.join(sRawRoot, "kundk_kw45", "pages", "bk_2.txt"), "utf8"), "page two");
+  const sSecondPagePath = path.join(sRawRoot, "kundk_kw45", oFirstSource.manifest.resources.find(function (oResource) {
+    return oResource.requestedUrl.endsWith("bk_2.txt");
+  }).localPath);
+  assert.equal(await fs.readFile(sSecondPagePath, "utf8"), "page two");
 
   const aSecondRequests = [];
   const oSecondSource = await KkCatalogSource.discover({
@@ -108,6 +111,47 @@ test("retries one transient 503 but stops immediately on HTTP 429", async functi
     }
   }), /HTTP 429/);
   assert.equal(iRateLimitAttempts, 1);
+});
+
+test("preserves the last completed snapshot when a later page fetch fails", async function (t) {
+  const sRawRoot = await fs.mkdtemp(path.join(os.tmpdir(), "shoppingtool-kk-partial-"));
+
+  t.after(async function () {
+    await fs.rm(sRawRoot, { recursive: true, force: true });
+  });
+
+  const mBodies = new Map([
+    [VIEWER_URL, '<html><script>catalog: "kundk_kw45::catalog"</script></html>'],
+    [VIEWER_URL + "catalogs/kundk_kw45/xml/catalog.xml", '<catalog name="kundk_kw45" nofpages="2"></catalog>'],
+    [VIEWER_URL + "catalogs/kundk_kw45/text/bk_1.txt", "original page one"],
+    [VIEWER_URL + "catalogs/kundk_kw45/text/bk_2.txt", "original page two"]
+  ]);
+  const oFirst = await KkCatalogSource.discover({
+    rawRoot: sRawRoot,
+    fetchImpl: createFetch(mBodies, [], false),
+    pageIntervalMs: 0
+  });
+  const sManifestBefore = await fs.readFile(path.join(sRawRoot, "kundk_kw45", "manifest.json"), "utf8");
+  const sFirstPagePath = path.join(sRawRoot, "kundk_kw45", oFirst.manifest.resources.find(function (oRecord) {
+    return oRecord.requestedUrl.endsWith("bk_1.txt");
+  }).localPath);
+
+  mBodies.set(VIEWER_URL + "catalogs/kundk_kw45/text/bk_1.txt", "changed page one");
+  await assert.rejects(KkCatalogSource.discover({
+    rawRoot: sRawRoot,
+    fetchImpl: async function (sUrl, oOptions) {
+      if (sUrl.endsWith("bk_2.txt")) {
+        return createResponse(sUrl, 503, "page unavailable", { "content-type": "text/plain" });
+      }
+
+      return createFetch(mBodies, [], false)(sUrl, oOptions);
+    },
+    pageIntervalMs: 0
+  }), /HTTP 503/);
+
+  assert.equal(await fs.readFile(path.join(sRawRoot, "kundk_kw45", "manifest.json"), "utf8"), sManifestBefore);
+  assert.equal(await fs.readFile(sFirstPagePath, "utf8"), "original page one");
+  assert.equal(await fs.readFile(oFirst.manifestPath, "utf8"), sManifestBefore);
 });
 
 function createFetch(mBodies, aRequests, bReturnNotModified) {

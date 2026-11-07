@@ -155,9 +155,10 @@ function createIncompleteAppleCandidate(oSource, aPages, oValidity) {
 
 function extractPastaFacts(sPageText) {
   const sText = String(sPageText || "");
+  const aNameMatches = Array.from(sText.matchAll(new RegExp(KNOWN_PASTA_OFFER.source, "gi")));
   const oNameMatch = KNOWN_PASTA_OFFER.exec(sText);
 
-  if (!oNameMatch) {
+  if (!oNameMatch || aNameMatches.length !== 1) {
     return null;
   }
 
@@ -168,11 +169,12 @@ function extractPastaFacts(sPageText) {
     : sAfterName.slice(0, 280);
   const aPackageMatches = Array.from(sOfferSection.matchAll(/(\d+(?:[.,]\d+)?)\s*(g|kg)\s+(Tube|Packung)\b/gi));
   const aUnitPriceMatches = Array.from(sOfferSection.matchAll(/1\s*kg\s*=\s*(\d+(?:[.,]\d{2})?)/gi));
+  const bHasQuantityRange = /\b\d+(?:[.,]\d+)?\s*(?:g|kg)\s*[–—-]\s*\d+(?:[.,]\d+)?\s*(?:g|kg)\b/i.test(sOfferSection);
   const aPastaPackages = aPackageMatches.filter(function (oMatch) {
     return oMatch[3].toLowerCase() === "packung";
   });
 
-  if (aPackageMatches.length !== aUnitPriceMatches.length || aPastaPackages.length !== 1) {
+  if (bHasQuantityRange || aPackageMatches.length !== aUnitPriceMatches.length || aPastaPackages.length !== 1) {
     return null;
   }
 

@@ -52,6 +52,22 @@ test("does not infer a validity year from the partial cover date", function () {
   assert.equal(oDocument.candidates[0].validFrom, null);
 });
 
+test("keeps ranged Barilla package sizes in review without deriving a fixed price", function () {
+  const oSource = createSource();
+  oSource.pages = oSource.pages.map(function (oPage) {
+    return oPage.number === 8
+      ? Object.assign({}, oPage, { text: oPage.text.replace("500g Packung", "250g–500g Packung") })
+      : oPage;
+  });
+  const oPasta = KkOfferCandidateParser.parse(oSource).candidates.find(function (oCandidate) {
+    return oCandidate.sourceOfferId === "kundk_kw45:barilla-la-collezione";
+  });
+
+  assert.equal(oPasta.packageQuantity, null);
+  assert.equal(oPasta.price, null);
+  assert.equal(oPasta.confidence, 0.35);
+});
+
 function createSource() {
   return {
     catalogId: "kundk_kw45",

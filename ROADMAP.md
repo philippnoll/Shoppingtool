@@ -441,13 +441,15 @@ Akzeptanzkriterien:
 
 ### Phase 5: Weitere Haendler Der Ersten Kohorte
 
-Status: ALDI Nord-Adapter umgesetzt; K+K und PENNY stehen noch aus.
+Status: ALDI Nord-Adapter und erster K+K-Discovery-Adapter umgesetzt; PENNY
+steht noch aus. Der K+K-Umfang und offene Store-Zuordnung sind in der
+[K+K-Quellenreferenz](docs/kk-offers-research.md) dokumentiert.
 
 Reihenfolge:
 
 1. ALDI Nord — umgesetzt; Quellenumfang und lokale Zuordnung siehe
    [Quellenreferenz](docs/data-sourcing-research.md#quelle-und-regionalitaet).
-2. K+K
+2. K+K — erster Discovery-Adapter umgesetzt; Ausbau und Store-Zuordnung offen.
 3. PENNY
 
 Fuer jede Kette zuerst einen Discovery-Spike durchfuehren. Nicht annehmen,
@@ -473,18 +475,8 @@ Akzeptanzkriterien je Haendler:
 - Reale Stichproben sind getestet.
 - Ausgabe kann ohne Sonderfall im `ShoppingOptimizer` verwendet werden.
 
-K+K-Discovery und erster Adapter (02.11.2026): Der normale offizielle Viewer
-laedt `kundk_kw45`, 12 Textseiten und eine explizite Gueltigkeit vom
-02.11.2026 bis 07.11.2026. `npm run parse:kk-offers` sichert die Originale
-unter `data/raw/offers/kk/`, parst eine klar quantifizierte Barilla-Pasta-
-Offerte und haelt Tafel-Aepfel ohne sicher zugeordnete Packungsmenge/Preis in
-Review. Andere Katalogartikel werden noch nicht geparst; das Layout der
-Textschicht ist nicht positionsstrukturiert. Der Standardlauf schreibt keine
-filialgebundenen Offers, solange keine `--store-id`-Werte explizit uebergeben
-werden. Der offizielle Finder zeigt drei Epe-Filialen mit demselben Prospekt,
-waehrend `data/stores.json` zwei K+K-IDs ohne Strassenadresse fuehrt; die
-bevorzugte Store-Auswahl und West/Ost-Zuordnung bleiben Captain-pending. Details
-und Quell-URLs: [K+K Offer Source and Adapter](docs/kk-offers-research.md).
+Der K+K-Discovery-Spike und Adapterstatus stehen in der
+[K+K-Quellenreferenz](docs/kk-offers-research.md).
 
 ### Phase 6: Persistenz, Historie Und NAS-Backend
 

@@ -702,21 +702,8 @@ Die ALDI-Tests verwenden nur die kleine Fixture beziehungsweise injizierte
 HTTP-Antworten. Sie decken Quellenform, Packungsparser, Netzwerkfehler,
 Timeout/Retry-Grenzen, Cache-Wiederverwendung, Duplikate, Gueltigkeitsfenster,
 Ketten-/Filial-Mismatch, bedingte Preise und konservative Produktzuordnung ab.
-## K+K Discovery
-## K+K Discovery und Adapter
 
-Die K+K-Quellenpruefung vom 02.11.2026 ist in
-[`docs/kk-offers-research.md`](kk-offers-research.md) dokumentiert. Der
-normale oeffentliche Viewer laedt den Katalog `kundk_kw45` mit 12 Seiten und
-Textdateien `bk_1.txt` bis `bk_12.txt`. Die Gueltigkeit 02.11.2026 bis
-07.11.2026 steht explizit auf den Prospektseiten. Der Adapter
-`scripts/parse-kk-offers.js` liest die Textseiten, parst eine eindeutig
-quantifizierbare Barilla-Pasta-Offerte und haelt Tafel-Aepfel ohne sicher
-zugeordnete Menge/Preis in Review. Der Textstrom ist nicht generell
-positionsstrukturiert; nicht unterstuetzte Artikel werden nicht geraten.
+## K+K
 
-Ohne explizite `--store-id`-Option erzeugt der Lauf keine filialgebundenen
-Optimizer-Angebote. Der offizielle Filialfinder zeigt drei Epe-Filialen mit
-demselben Prospektlink, waehrend `data/stores.json` zwei interne K+K-IDs ohne
-Strassenadresse fuehrt. Die bevorzugte Store-Auswahl und die Zuordnung West/
-Ost zu konkreten Filialen bleiben eine separate Captain-Entscheidung.
+K+K source research, parser boundaries and adapter operations are maintained
+in the [K+K source and adapter reference](kk-offers-research.md).
